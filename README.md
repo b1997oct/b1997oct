@@ -1,5 +1,5 @@
 - 👋 Hi, I’m @b1997oct
-- 👀 I’m interested in ... De coding
+- 👀 I’m interested in ... De code
 - 🌱 I’m currently learning ... Py
 - 💞️ I’m looking to collaborate on ... Futuristic Software
 - 📫 How to reach me --> b1997oct@gmail.com
