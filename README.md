@@ -1,8 +1,8 @@
 - 👋 Hi, I’m @b1997oct
-- 👀 I’m interested in ... De code
-- 🌱 I’m currently learning ... Py
-- 💞️ I’m looking to collaborate on ... Futuristic Software
-- 📫 How to reach me --> b1997oct@gmail.com
+- 👀 I’m interested in ... Building Software thats helps minimum 2 peoples
+- 🌱 I’m currently learning ... Flutter
+- 💞️ I’m looking to build thing that no one ever did
+- 📫 You want me to work on your idea drop your query to b1997oct@gmail.com
 
 <!---
 b1997oct/b1997oct is a ✨ special ✨ repository because its `README.md` (this file) appears on your GitHub profile.
