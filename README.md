@@ -2,7 +2,7 @@
 - 👀 I’m interested in ... Building Software thats helps minimum 2 peoples
 - 🌱 I’m currently learning ... Flutter
 - 💞️ I’m looking to build thing that no one ever did
-- 📫 You want to collaborate then drop your query to b1997oct@gmail.com
+- 📫 Want to collaborate? then drop your query to b1997oct@gmail.com
 
 <!---
 b1997oct/b1997oct is a ✨ special ✨ repository because its `README.md` (this file) appears on your GitHub profile.
