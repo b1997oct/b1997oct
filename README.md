@@ -17,7 +17,7 @@
 
 ## 🛠️ Skills  
 - **Languages:** JavaScript, TypeScript, Dart, Python  
-- **Frameworks & Libraries:** Flutter, React, Next.js, Node.js, Express  
+- **Frameworks & Libraries:** React, Next.js, Node.js, Express, AstroJs, Remix, Mongodb services
 - **Databases:** MongoDB, PostgreSQL, MySQL  
 - **Tools & Platforms:** Git, Firebase  
 - **Other:** REST APIs, Authentication, Cloud Deployment
