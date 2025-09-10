@@ -1,4 +1,4 @@
-# 👋 Hi, I’m Barath (@b1997oct)
+# ✅ Hi, I’m Barath (@b1997oct)
 
 🚀 Passionate about building **software that truly helps people** — my goal is to create solutions that improve lives, starting with at least two people at a time.  
 
@@ -24,7 +24,7 @@
 
 
 ## 🌱 Currently Learning  
-- **Flutter** — crafting beautiful cross-platform apps  
+- **Turborepo** — crafting beautiful cross-platform apps in a single repo  
 - Expanding skills in full-stack development  
 
 ## 💡 Vision  
