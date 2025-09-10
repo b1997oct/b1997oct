@@ -1,0 +1,17 @@
+{
+  "name": "b1997oct",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "![Welcome GIF](https://b197oct.vercel.app/public/hey-dino.gif)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "node src/build.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "marked": "^16.2.1"
+  }
+}
