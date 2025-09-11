@@ -7,7 +7,7 @@ const html = `
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>README</title>
+  <title>Barath M N</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css/github-markdown.min.css">
   <style>
     body { display: flex; justify-content: center; }
