@@ -6,12 +6,23 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "node src/build.js"
+    "lint": "npx lint-staged",
+    "build": "node src/build.js && npm run lint",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "public/*.html": "prettier --write",
+    "src/build.js": "prettier --write"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "marked": "^16.2.1"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.1.6",
+    "prettier": "^3.6.2"
   }
 }

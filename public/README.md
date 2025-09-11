@@ -1,5 +1,5 @@
 # ✅ Hi, I’m Barath (@b1997oct)
-![Welcome GIF](https://b197oct.vercel.app/hey-dino.gif)
+![Welcome GIF](https://b1997oct.vercel.app/hey-dino.gif)
 
 
 🚀 Passionate about building **software that truly helps people** — my goal is to create solutions that improve lives, starting with at least two people at a time.  
@@ -10,7 +10,7 @@
 - Building projects that make a real-world difference
 
 ## 📂 Applications I’ve Built  
-![Application GIF](https://b197oct.vercel.app/working-cat.gif)
+![Application GIF](https://b1997oct.vercel.app/working-cat.gif)
 
 - 🏢 **Job Portal** – helping job seekers connect with employers  
 - 🛒 **E-Commerce Platform** – full-stack store with cart, payments, and user accounts  
@@ -29,7 +29,7 @@
 
 ## 🌱 Currently Learning 
 
-![Learning GIF](https://b197oct.vercel.app/learing-cat.webp)
+![Learning GIF](https://b1997oct.vercel.app/learing-cat.webp)
 
 - **Turborepo** — crafting beautiful cross-platform apps in a single repo  
 - Expanding skills in full-stack development  
@@ -48,4 +48,4 @@ Open to collaborating on projects that:
 
 ⭐️ *If you like what I’m working on, don’t forget to follow me for updates!*  
 
-![Star GIF](https://b197oct.vercel.app/star.gif)
+![Star GIF](https://b1997oct.vercel.app/star.gif)

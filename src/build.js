@@ -12,6 +12,7 @@ const html = `<!DOCTYPE html>
 <meta name="keywords" content="Barath, b1997oct, Software Developer, Full-Stack Developer, JavaScript, React, Next.js, Node.js, MongoDB, PostgreSQL, MySQL">
 <meta name="author" content="Barath M N">
 <meta name="robots" content="index, follow">
+<meta name="source" content="https://github.com/b1997oct/b1997oct">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Open Graph -->
@@ -38,9 +39,18 @@ const html = `<!DOCTYPE html>
 <body>
   <article class="markdown-body">
     ${marked(md)}
+    
+     <!-- content source link -->
+    <div>
+      🌟
+      <a href="https://github.com/b1997oct/b1997oct" target="_blank" rel="noopener noreferrer"
+        class="inline-flex items-center px-6 py-3 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+         Content Source
+      </a>
+    </div>
   </article>
 </body>
-</html>`
+</html>`;
 
 fs.writeFileSync("public/index.html", html);
 fs.copyFileSync("README.md", "public/README.md");
