@@ -43,7 +43,7 @@ const html = `<!DOCTYPE html>
      <!-- content source link -->
     <div>
       🌟
-      <a href="https://github.com/b1997oct/b1997oct" target="_blank" rel="noopener noreferrer"
+      <a href="https://github.com/b1997oct" target="_blank" rel="noopener noreferrer"
         class="inline-flex items-center px-6 py-3 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
          Content Source
       </a>
