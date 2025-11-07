@@ -1,5 +1,5 @@
 # ✅ Hi, I’m Barath (@b1997oct)
-![Welcome GIF](https://b1997oct.vercel.app/hey-dino.gif)
+![Pixel Dino](https://raw.githubusercontent.com/Anmol-Baranwal/Cool-GIFs-For-GitHub/main/welcome/welcome-gif.gif)
 
 
 🚀 Passionate about building **software that truly helps people** — my goal is to create solutions that improve lives, starting with at least two people at a time.  
@@ -49,3 +49,7 @@ Open to collaborating on projects that:
 ⭐️ *If you like what I’m working on, don’t forget to follow me for updates!*  
 
 ![Star GIF](https://b1997oct.vercel.app/star.gif)
+
+<p align="center">
+  <img src="https://komarev.com/ghpvc/?username=b1997oct&label=Profile%20views&color=0e75b6" alt="b1997oct" />
+</p>
