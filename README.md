@@ -1,5 +1,6 @@
 # ✅ Hi, I’m Barath (@b1997oct)
-![Pixel Dino](https://raw.githubusercontent.com/Anmol-Baranwal/Cool-GIFs-For-GitHub/main/welcome/welcome-gif.gif)
+<img src="https://user-images.githubusercontent.com/74038190/212741999-016fddbd-617a-4448-8042-0ecf907aea25.gif" width="500" alt="Welcome GIF">
+
 
 
 🚀 Passionate about building **software that truly helps people** — my goal is to create solutions that improve lives, starting with at least two people at a time.  
