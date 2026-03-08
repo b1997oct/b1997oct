@@ -1,3 +1,0 @@
-#!/bin/sh
-echo "✨ Formatting staged files..."
-npx lint-staged

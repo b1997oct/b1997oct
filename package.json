@@ -1,28 +1,32 @@
 {
-  "name": "b1997oct",
-  "version": "1.0.0",
+  "name": "astro-agent",
   "type": "module",
-  "description": "![Welcome GIF](https://b197oct.vercel.app/public/hey-dino.gif)",
-  "main": "index.js",
+  "version": "0.0.1",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "format": "node src/build.js && git add . && npx lint-staged",
-    "build": "node src/build.js",
-    "prepare": "husky"
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "mcp": "npm i && npx astro dev"
   },
-  "lint-staged": {
-    "public/*.html": "prettier --write",
-    "src/build.js": "prettier --write"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "marked": "^16.2.1"
+    "@astrojs/react": "^4.4.2",
+    "@astrojs/vercel": "^9.0.4",
+    "@google/generative-ai": "^0.24.1",
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "@tailwindcss/vite": "^4.2.1",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "astro": "^5.17.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-markdown": "^10.1.0",
+    "rehype-raw": "^7.0.0",
+    "remark-gfm": "^4.0.1",
+    "tailwindcss": "^4.2.1"
   },
   "devDependencies": {
-    "husky": "^9.1.7",
-    "lint-staged": "^16.1.6",
-    "prettier": "^3.6.2"
+    "@types/node": "^25.3.5",
+    "tsx": "^4.21.0"
   }
 }

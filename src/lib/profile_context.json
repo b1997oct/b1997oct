@@ -1,0 +1,95 @@
+{
+    "basic": {
+        "name": "Barath",
+        "github": "b1997oct",
+        "tagline": "Passionate about exploring AI & building AI Agents to solve real-world problems — my goal is to create intelligent solutions that improve lives at scale.",
+        "email": "b1997oct@gmail.com",
+        "vision": "I’m on a mission to build something that no one has ever done before — unique ideas, original execution, and meaningful impact."
+    },
+    "skills": {
+        "ai_ml": [
+            "Generative AI",
+            "LLMs",
+            "Neural Networks"
+        ],
+        "ai_agents": [
+            "Agentic Workflows",
+            "LangChain",
+            "Multi-Agent Systems"
+        ],
+        "prompt_engineering": [
+            "RAG",
+            "Prompt Optimization",
+            "Context Injection"
+        ],
+        "languages": [
+            "JavaScript",
+            "TypeScript",
+            "Dart",
+            "Python"
+        ],
+        "frameworks_libraries": [
+            "React",
+            "Next.js",
+            "Node.js",
+            "Express",
+            "AstroJs",
+            "Remix",
+            "Mongodb services"
+        ],
+        "databases": [
+            "MongoDB",
+            "PostgreSQL",
+            "MySQL"
+        ],
+        "tools_platforms": [
+            "Git",
+            "Firebase"
+        ],
+        "other": [
+            "REST APIs",
+            "Authentication",
+            "Cloud Deployment"
+        ]
+    },
+    "interests": {
+        "technical": [
+            "Engineering intelligent AI Agents for real-world tasks",
+            "Exploring Large Language Models (LLMs) and Generative AI",
+            "Building autonomous systems that make a difference"
+        ]
+    },
+    "applications": [
+        {
+            "name": "Job Portal",
+            "description": "helping job seekers connect with employers"
+        },
+        {
+            "name": "E-Commerce Platform",
+            "description": "full-stack store with cart, payments, and user accounts"
+        },
+        {
+            "name": "Chat/Social App",
+            "description": "real-time communication with authentication"
+        },
+        {
+            "name": "Blog/Content Platform",
+            "description": "create, manage, and share articles"
+        },
+        {
+            "name": "Dashboard & Analytics Tools",
+            "description": "data visualization for businesses"
+        },
+        {
+            "name": "Learning/Quiz Platform",
+            "description": "interactive app for education and practice"
+        }
+    ],
+    "learning": {
+        "current_focus": [
+            "AI Agent Frameworks — LangChain, AutoGPT, and custom agent architectures",
+            "Advanced LLM Integration — Prompt engineering, RAG, and fine-tuning",
+            "Autonomous Systems — Building loops that observe, think, and act"
+        ]
+    }
+}
