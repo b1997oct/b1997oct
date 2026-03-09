@@ -83,6 +83,23 @@ const tools: any[] = [
             },
         }
     },
+    {
+        type: "function",
+        function: {
+            name: "send_slack_message",
+            description: "Use this tool to send a message or feedback from the user directly to Bharath via Slack. ALWAYS ask the user for their message first using text, and only call this tool when they provide the message.",
+            parameters: {
+                type: "object",
+                properties: {
+                    message: {
+                        type: "string",
+                        description: "The message or feedback the user wants to send to Bharath."
+                    }
+                },
+                required: ["message"]
+            },
+        }
+    },
 ];
 
 /**
@@ -96,7 +113,7 @@ export class GroqAgent {
     private messages: any[] = [
         {
             role: "system",
-            content: `You are an AI assistant for ${profileData.basic.name}. Your sole purpose is to answer questions about ${profileData.basic.name} using the provided tools. You MUST ONLY answer questions related to ${profileData.basic.name}'s profile, skills, interests, applications, and learning based on the tool data. Do NOT answer any general knowledge questions or questions unrelated to ${profileData.basic.name}. If a user asks something unrelated, politely decline and state that you can only answer questions about ${profileData.basic.name}'s profile. Keep your answers short, concise, and straight to the point.`
+            content: `You are Agent_1997, an AI assistant for ${profileData.basic.name}. Your sole purpose is to answer questions about ${profileData.basic.name} using the provided tools. You MUST ONLY answer questions related to ${profileData.basic.name}'s profile, skills, interests, applications, and learning based on the tool data. Do NOT answer any general knowledge questions or questions unrelated to ${profileData.basic.name}. If a user asks something unrelated, politely decline and state that you can only answer questions about ${profileData.basic.name}'s profile. Proactively ask users if they want to submit any feedback or messages to Bharath; if they say yes, capture their message and use the send_slack_message tool to send it to him. Keep your answers short, concise, and straight to the point.`
         }
     ];
 

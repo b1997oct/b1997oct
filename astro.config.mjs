@@ -26,6 +26,19 @@ export default defineConfig({
         context: 'server',
         access: 'secret',
         type: 'string',
+        optional: true,
+      },
+      GROQ_API_KEY: {
+        context: 'server',
+        access: 'secret',
+        type: 'string',
+        optional: true,
+      },
+      SLACK_WEBHOOK_URL: {
+        context: 'server',
+        access: 'secret',
+        type: 'string',
+        optional: true,
       },
     }
   },
