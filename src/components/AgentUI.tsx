@@ -51,7 +51,7 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!prompt.trim()) return;
+        if (loading || isTypingInitial || !prompt.trim()) return;
 
         const userMsg = prompt;
         setResults(prev => [...prev, { role: 'user', text: userMsg }]);
@@ -145,12 +145,12 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                         onChange={(e) => setPrompt(e.target.value)}
                         placeholder="Ask Question..."
                         className="w-full bg-slate-900/80 border border-slate-800 rounded-2xl pl-6 pr-32 py-4 md:py-5 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all text-slate-100 placeholder:text-slate-500 shadow-lg text-sm md:text-base"
-                        disabled={loading}
+                        // disabled={loading || isTypingInitial}
                     />
                     <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2 pr-2">
                         <button
                             type="submit"
-                            disabled={loading || !prompt.trim()}
+                            disabled={loading || isTypingInitial || !prompt.trim()}
                             className="bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-500 px-6 py-2.5 md:py-3 rounded-xl font-bold transition-all shadow-md active:scale-95 flex items-center justify-center min-w-[80px]"
                         >
                             {loading ? (
