@@ -1,12 +1,68 @@
 {
     "basic": {
-        "name": "Barath",
-        "github": "b1997oct",
-        "tagline": "With over 5 Years experience in software development, I am passionate about exploring AI & building AI Agents to solve real-world problems — my goal is to create intelligent solutions that improve lives at scale.",
+        "name": "Bharath M N",
         "email": "b1997oct@gmail.com",
-        "vision": "I’m on a mission to build something that no one has ever done before — unique ideas, original execution, and meaningful impact."
+        "phone": "+91 78924 75321",
+        "location": "Bangalore, Karnataka - 560076",
+        "github": "https://github.com/b1997oct",
+        "linkedin": "https://linkedin.com/in/barath-nethra",
+        "website": "https://b1997oct.vercel.app",
+        "tagline": "Frontend Developer with 3+ years of experience building scalable, high-performance web applications.",
+        "summary": "Skilled in JavaScript, Nextjs, React, TypeScript, Redux, Tailwind CSS, and modern testing frameworks. Strong expertise in responsive UI, accessibility, and performance optimization. Adept at collaborating in agile teams and delivering pixel-perfect, user-focused applications."
+    },
+    "experience": [
+        {
+            "company": "Codewave",
+            "role": "Software Developer",
+            "duration": "Apr 2025 - Present",
+            "description": "Built and optimized React.js & Next.js applications by developing reusable components for scalability. Ensured high code quality through peer reviews and Test-Driven Development (TDD) practices. Integrated and managed REST and GraphQL APIs for seamless data handling in React frontends & handling CICD pipeline."
+        },
+        {
+            "company": "Winline Technologies",
+            "role": "Software Developer",
+            "duration": "Feb 2024 – Mar 2025",
+            "description": "Built Next.js Full-stack apps with responsive React frontend. Integrated REST APIs for dynamic content rendering. Improved SEO through meta tag optimization and schema markup."
+        },
+        {
+            "company": "Firstcareer",
+            "role": "FullStack Developer",
+            "duration": "May 2023 – Feb 2024",
+            "description": "Developed high-performance Next.js projects with server-side rendering. Styled modern responsive UIs using Tailwind CSS. Worked on API routes and authentication flows in Node.js Applications."
+        },
+        {
+            "company": "Plausibility Solutions",
+            "role": "Junior Frontend Developer",
+            "duration": "Dec 2022 – May 2023",
+            "description": "Built scalable, responsive UIs using JavaScript, TypeScript, and React. State management using both Redux and the Context API. Proficient in API integration for efficient and reliable handling of real-time data."
+        }
+    ],
+    "education": {
+        "degree": "Bachelor of Engineering: Electronics and Communication",
+        "institution": "Visvesvaraya Technological University",
+        "duration": "2018 - 2022",
+        "cgpa": "7"
     },
     "skills": {
+        "languages": [
+            "JavaScript",
+            "TypeScript"
+        ],
+        "frameworks_libraries": [
+            "React.js",
+            "Next.js",
+            "Node.js",
+            "Express",
+            "Tailwind CSS",
+            "Redux"
+        ],
+        "databases": [
+            "MongoDB"
+        ],
+        "tools_platforms": [
+            "Git",
+            "GraphQL",
+            "REST APIs"
+        ],
         "ai_ml": [
             "Generative AI",
             "LLMs",
@@ -21,72 +77,47 @@
             "RAG",
             "Prompt Optimization",
             "Context Injection"
-        ],
-        "languages": [
-            "JavaScript",
-            "TypeScript",
-            "Dart",
-            "Python"
-        ],
-        "frameworks_libraries": [
-            "React",
-            "Next.js",
-            "Node.js",
-            "Express",
-            "AstroJs",
-            "Remix",
-            "Mongodb services"
-        ],
-        "databases": [
-            "MongoDB",
-            "PostgreSQL",
-            "MySQL"
-        ],
-        "tools_platforms": [
-            "Git",
-            "Firebase"
-        ],
-        "other": [
-            "REST APIs",
-            "Authentication",
-            "Cloud Deployment"
         ]
     },
+    "applications": [
+        {
+            "name": "GearX AI",
+            "url": "https://gearx.ai",
+            "description": "Musical instrument marketplace (Next.js, GraphQL, React)."
+        },
+        {
+            "name": "MKS Foods",
+            "url": "https://mksfoods.in",
+            "description": "E-commerce platform (Next.js, React.js, Nodejs)."
+        },
+        {
+            "name": "Winline Technologies",
+            "url": "https://winlinetech.com",
+            "description": "CRM & B2B software platform (React.js, NodeJs)."
+        },
+        {
+            "name": "Firstcareer",
+            "url": "https://firstcareer.co",
+            "description": "Job application portal (Next.js, MongoDB, Express)."
+        }
+    ],
     "interests": {
+        "professional": [
+            "Frontend Development",
+            "Fullstack Development",
+            "Agile Collaboration",
+            "Performance Optimization"
+        ],
         "technical": [
             "Engineering intelligent AI Agents for real-world tasks",
             "Exploring Large Language Models (LLMs) and Generative AI",
             "Building autonomous systems that make a difference"
         ]
     },
-    "applications": [
-        {
-            "name": "Job Portal",
-            "description": "helping job seekers connect with employers"
-        },
-        {
-            "name": "E-Commerce Platform",
-            "description": "full-stack store with cart, payments, and user accounts"
-        },
-        {
-            "name": "Chat/Social App",
-            "description": "real-time communication with authentication"
-        },
-        {
-            "name": "Blog/Content Platform",
-            "description": "create, manage, and share articles"
-        },
-        {
-            "name": "Dashboard & Analytics Tools",
-            "description": "data visualization for businesses"
-        },
-        {
-            "name": "Learning/Quiz Platform",
-            "description": "interactive app for education and practice"
-        }
-    ],
     "learning": {
         "current_focus": [
+            "Test-Driven Development (TDD)",
+            "CI/CD Pipeline handling",
             "AI Agent Frameworks — LangChain, AutoGPT, and custom agent architectures",
             "Advanced LLM Integration — Prompt engineering, RAG, and fine-tuning",
             "Autonomous Systems — Building loops that observe, think, and act"

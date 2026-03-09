@@ -27,5 +27,15 @@ export const toolHandlers = {
     get_profile_learning: async () => {
         console.log(`[Tools] Calling get_profile_learning`);
         return { learning: profile.learning };
+    },
+
+    get_profile_experience: async () => {
+        console.log(`[Tools] Calling get_profile_experience`);
+        return { experience: profile.experience };
+    },
+
+    get_profile_education: async () => {
+        console.log(`[Tools] Calling get_profile_education`);
+        return { education: profile.education };
     }
 };

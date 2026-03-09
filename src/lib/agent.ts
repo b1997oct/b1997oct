@@ -10,7 +10,7 @@ const tools: any[] = [
         type: "function",
         function: {
             name: "get_profile_basic",
-            description: "Get basic information about Barath, including name, GitHub, tagline, email, and vision.",
+            description: "Get basic information about Bharath, including name, GitHub, tagline, email, phone, and professional summary.",
             parameters: {
                 type: "object",
                 properties: {},
@@ -21,7 +21,7 @@ const tools: any[] = [
         type: "function",
         function: {
             name: "get_profile_skills",
-            description: "Get a detailed list of Barath's skills, including AI, ML, Agents, Prompt Engineering, and Databases.",
+            description: "Get a detailed list of Bharath's skills, including languages, frameworks, databases, and tools.",
             parameters: {
                 type: "object",
                 properties: {},
@@ -32,7 +32,7 @@ const tools: any[] = [
         type: "function",
         function: {
             name: "get_profile_interests",
-            description: "Get a list of Barath's professional and technical interests.",
+            description: "Get a list of Bharath's professional and technical interests.",
             parameters: {
                 type: "object",
                 properties: {},
@@ -43,7 +43,7 @@ const tools: any[] = [
         type: "function",
         function: {
             name: "get_profile_applications",
-            description: "Get a list of applications and projects Barath has built.",
+            description: "Get a list of applications and projects Bharath has built.",
             parameters: {
                 type: "object",
                 properties: {},
@@ -54,7 +54,29 @@ const tools: any[] = [
         type: "function",
         function: {
             name: "get_profile_learning",
-            description: "Get information about what Barath is currently learning or focusing on.",
+            description: "Get information about what Bharath is currently learning or focusing on.",
+            parameters: {
+                type: "object",
+                properties: {},
+            },
+        }
+    },
+    {
+        type: "function",
+        function: {
+            name: "get_profile_experience",
+            description: "Get a detailed list of Bharath's professional work experience, including roles, companies, and durations.",
+            parameters: {
+                type: "object",
+                properties: {},
+            },
+        }
+    },
+    {
+        type: "function",
+        function: {
+            name: "get_profile_education",
+            description: "Get information about Bharath's education, degree, institution, and graduating year.",
             parameters: {
                 type: "object",
                 properties: {},
@@ -66,10 +88,17 @@ const tools: any[] = [
 /**
  * 3. The Agent Builder
  */
+import profileData from "./profile_context.json";
+
 export class GroqAgent {
     private groq: Groq;
     private model: string = "openai/gpt-oss-20b";
-    private messages: any[] = [];
+    private messages: any[] = [
+        {
+            role: "system",
+            content: `You are an AI assistant for ${profileData.basic.name}. Your sole purpose is to answer questions about ${profileData.basic.name} using the provided tools. You MUST ONLY answer questions related to ${profileData.basic.name}'s profile, skills, interests, applications, and learning based on the tool data. Do NOT answer any general knowledge questions or questions unrelated to ${profileData.basic.name}. If a user asks something unrelated, politely decline and state that you can only answer questions about ${profileData.basic.name}'s profile. Keep your answers short, concise, and straight to the point.`
+        }
+    ];
 
     constructor(apiKey: string) {
         if (!apiKey) throw new Error("Groq API Key is required.");
