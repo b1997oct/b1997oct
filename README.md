@@ -19,8 +19,6 @@
 
 ## 🌱 Currently Learning 
 
-![Learning GIF](https://b1997oct.vercel.app/learing-cat.webp)
-
 - **AI Agent Frameworks** — LangChain, AutoGPT, and custom agent architectures
 - **Advanced LLM Integration** — Prompt engineering, RAG, and fine-tuning
 - **Autonomous Systems** — Building loops that observe, think, and act
