@@ -1,13 +1,13 @@
 {
     "basic": {
-        "name": "Bharath M N",
+        "name": "Barath Nethra",
         "email": "b1997oct@gmail.com",
         "phone": "+91 78924 75321",
         "location": "Bangalore, Karnataka - 560076",
         "github": "https://github.com/b1997oct",
         "linkedin": "https://linkedin.com/in/barath-nethra",
         "website": "https://b1997oct.vercel.app",
-        "tagline": "Frontend Developer with 3+ years of experience building scalable, high-performance web applications.",
+        "tagline": "Frontend Developer with 4+ years of experience building scalable, high-performance web applications.",
         "summary": "Skilled in JavaScript, Nextjs, React, TypeScript, Redux, Tailwind CSS, and modern testing frameworks. Strong expertise in responsive UI, accessibility, and performance optimization. Adept at collaborating in agile teams and delivering pixel-perfect, user-focused applications."
     },
     "experience": [
@@ -99,6 +99,11 @@
             "name": "Firstcareer",
             "url": "https://firstcareer.co",
             "description": "Job application portal (Next.js, MongoDB, Express)."
+        },
+        {
+            "name": "Upgradableweb",
+            "url": "https://upgradableweb.com",
+            "description": "SAAS platform (Astro.js, MongoDB, Express)."
         }
     ],
     "interests": {
