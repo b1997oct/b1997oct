@@ -61,5 +61,18 @@ export const toolHandlers = {
         } catch (error: any) {
             return { success: false, error: error.message };
         }
+    },
+
+    get_best_friends: async () => {
+        console.log(`[Tools] Calling get_best_friends`);
+        return { 
+            best_friends: [
+                "Cursor 🤖 (The AI Code Editor)",
+                "ChatGPT 💬 (The Conversationalist)",
+                "n8n ⚡ (The Automation Hub)",
+                "Claude 🧠 (The Reasoning Expert)",
+                "v0 🎨 (The UI Visionary)"
+            ] 
+        };
     }
 };
