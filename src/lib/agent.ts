@@ -100,6 +100,17 @@ const tools: any[] = [
             },
         }
     },
+    {
+        type: "function",
+        function: {
+            name: "get_best_friends",
+            description: "Get a list of Bharath's best friends.",
+            parameters: {
+                type: "object",
+                properties: {},
+            },
+        }
+    },
 ];
 
 /**
@@ -113,7 +124,20 @@ export class GroqAgent {
     private messages: any[] = [
         {
             role: "system",
-            content: `You are Agent_1997, an AI assistant for ${profileData.basic.name}. Your sole purpose is to answer questions about ${profileData.basic.name} using the provided tools. You MUST ONLY answer questions related to ${profileData.basic.name}'s profile, skills, interests, applications, and learning based on the tool data. Do NOT answer any general knowledge questions or questions unrelated to ${profileData.basic.name}. If a user asks something unrelated, politely decline and state that you can only answer questions about ${profileData.basic.name}'s profile. Proactively ask users if they want to submit any feedback or messages to Bharath; if they say yes, capture their message and use the send_slack_message tool to send it to him. Keep your answers short, concise, and straight to the point.`
+            content: `You are Agent_1997, an AI assistant for ${profileData.basic.name}. Your sole purpose is to answer questions about ${profileData.basic.name} using the provided tools. You MUST ONLY answer questions related to ${profileData.basic.name}'s profile, skills, interests, applications, learning, and best friends based on the tool data. 
+
+For contact information (email, phone, LinkedIn, GitHub, etc.), you MUST use the 'get_profile_basic' tool and provide the details found there as clickable Markdown links where applicable. Do NOT say you can only answer profile questions when asked for contact info, as contact info is part of the profile.
+
+If a user asks how to contact or message Bharath, you can provide his email/phone from 'get_profile_basic' AND proactively ask if they want to send him a direct message via Slack. If they say yes, capture their message and use the 'send_slack_message' tool.
+
+ALWAYS use Markdown for your responses (e.g., [Name](URL) for links, **bold** for emphasis, lists for multiple items) to ensure the UI renders them beautifully. 
+
+When listing multiple items (like skills, experience, or tools), ALWAYS use a vertical bulleted list (one item per line) instead of a table or a comma-separated string. This ensures the information is clear and readable on all devices. For example:
+### Category Name
+- Item 1
+- Item 2
+
+Do NOT answer any general knowledge questions or questions unrelated to ${profileData.basic.name}. If a user asks something completely unrelated, politely decline. Keep your answers short, concise, and straight to the point.`
         }
     ];
 
@@ -122,7 +146,12 @@ export class GroqAgent {
         this.groq = new Groq({ apiKey });
     }
 
-    async run(prompt: string): Promise<string> {
+    async run(prompt: string, history: any[] = []): Promise<string> {
+        // Prepend history if provided, but after the system message
+        if (history.length > 0) {
+            this.messages = [this.messages[0], ...history];
+        }
+
         this.messages.push({ role: "user", content: prompt });
 
         let response = await this.groq.chat.completions.create({

@@ -40,6 +40,12 @@ export default defineConfig({
         type: 'string',
         optional: true,
       },
+      MONGODB_URI: {
+        context: 'server',
+        access: 'secret',
+        type: 'string',
+        optional: true,
+      },
     }
   },
 
