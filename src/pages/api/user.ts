@@ -34,7 +34,7 @@ export const GET: APIRoute = async ({ request }) => {
 
 export const PATCH: APIRoute = async ({ request }) => {
     const body = await request.json();
-    const { userId, username, theme, client_control } = body;
+    const { userId, username, theme, client_control, pin } = body;
 
     if (!userId) {
         return Response.json({ error: 'userId is required' }, { status: 400 });
@@ -68,6 +68,12 @@ export const PATCH: APIRoute = async ({ request }) => {
         if (username !== undefined) updateFields.username = username;
         if (theme !== undefined) updateFields.theme = theme;
         if (client_control !== undefined) updateFields.client_control = client_control;
+        if (pin !== undefined) {
+            if (typeof pin !== 'string' || pin.length < 4 || pin.length > 8 || !/^\d+$/.test(pin)) {
+                return Response.json({ error: 'PIN must be 4-8 digits' }, { status: 400 });
+            }
+            updateFields.pin = pin;
+        }
 
         await usersCollection.updateOne(
             { _id: new ObjectId(userId) },
@@ -94,7 +100,7 @@ export const PATCH: APIRoute = async ({ request }) => {
 
 export const POST: APIRoute = async ({ request }) => {
     const body = await request.json();
-    const { username, theme, client_control } = body;
+    const { username, theme, client_control, pin } = body;
 
     if (!username || typeof username !== 'string') {
         return Response.json({ error: 'username is required' }, { status: 400 });
@@ -102,6 +108,10 @@ export const POST: APIRoute = async ({ request }) => {
 
     if (/\s/.test(username)) {
         return Response.json({ error: 'Username must not contain spaces' }, { status: 400 });
+    }
+
+    if (!pin || typeof pin !== 'string' || pin.length < 4 || pin.length > 8 || !/^\d+$/.test(pin)) {
+        return Response.json({ error: 'PIN must be 4-8 digits' }, { status: 400 });
     }
 
     try {
@@ -115,6 +125,7 @@ export const POST: APIRoute = async ({ request }) => {
 
         const result = await usersCollection.insertOne({
             username,
+            pin,
             theme: theme || 'system',
             client_control: client_control ?? true,
             createdAt: new Date(),
