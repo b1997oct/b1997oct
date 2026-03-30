@@ -93,7 +93,7 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
         }
     };
 
-    const handleOnboardingComplete = (userData: { _id: string; username: string; theme: string; client_control: boolean }) => {
+    const handleOnboardingComplete = (userData: { _id: string; username: string; theme: string; client_control: boolean }, restoredSessionId?: string | null) => {
         const u: UserData = {
             _id: userData._id,
             username: userData.username,
@@ -106,6 +106,14 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
         localStorage.setItem('user_id', u._id);
         localStorage.setItem('theme', u.theme);
         applyThemeToDOM(u.theme);
+
+        if (restoredSessionId) {
+            localStorage.setItem('chat_session_id', restoredSessionId);
+            setSessionId(restoredSessionId);
+            setResults([]);
+            setDisplayedInitial('');
+            setHistoryLoaded(false);
+        }
     };
 
     const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
@@ -119,15 +127,16 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
         }
     };
 
-    // Initialize Session ID
+    // Initialize Session ID only after user is resolved (not during onboarding)
     useEffect(() => {
+        if (!userChecked || showOnboarding) return;
         let id = localStorage.getItem('chat_session_id');
         if (!id) {
             id = crypto.randomUUID();
             localStorage.setItem('chat_session_id', id);
         }
         setSessionId(id);
-    }, []);
+    }, [userChecked, showOnboarding]);
 
     // Load history when session ID is set
     useEffect(() => {
@@ -206,6 +215,8 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
         return () => clearInterval(interval);
     }, [initialMessage, isTypingInitial, sessionId]);
 
+    const chatReady = userChecked && !showOnboarding && !!user;
+
     // Combined results for rendering
     const allMessages = [
         ...results,
@@ -266,79 +277,88 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                 </div>
             </header>
 
-            {/* Chat Area */}
-            <div
-                ref={scrollRef}
-                className="flex-1 overflow-y-auto px-4 py-8 md:px-6 custom-scrollbar"
-            >
-                <div className="max-w-4xl mx-auto space-y-8">
-                    {allMessages.map((res, i) => (
-                        <div key={i} className={`flex ${res.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-                            <div className={`group relative max-w-[85%] md:max-w-[75%] px-5 py-4 rounded-2xl shadow-sm dark:shadow-xl wrap-break-word ${res.role === 'user'
-                                ? 'bg-blue-600 text-white rounded-tr-none'
-                                : 'bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50 text-slate-900 dark:text-slate-200 rounded-tl-none backdrop-blur-sm'
-                                }`}>
-                                {res.role === 'agent' ? (
-                                    <div className="prose dark:prose-invert text-sm md:text-base max-w-none prose-p:leading-relaxed prose-pre:bg-slate-50 dark:prose-pre:bg-slate-950 prose-pre:border prose-pre:border-slate-200 dark:prose-pre:border-slate-700 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:font-bold hover:prose-a:underline transition-colors text-slate-800 dark:text-slate-100">
-                                        <ReactMarkdown
-                                            remarkPlugins={[remarkGfm]}
-                                            rehypePlugins={[rehypeRaw]}
-                                            components={{
-                                                a: ({ node, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,
-                                                p: ({ node, ...props }) => <p {...props} className="text-sm md:text-base leading-relaxed mb-2 last:mb-0" />,
-                                                li: ({ node, ...props }) => <li {...props} className="text-sm md:text-base leading-relaxed" />,
-                                                ul: ({ node, ...props }) => <ul {...props} className="list-disc pl-4 mb-2" />,
-                                                ol: ({ node, ...props }) => <ol {...props} className="list-decimal pl-4 mb-2" />,
-                                                h1: ({ node, ...props }) => <h1 {...props} className="text-lg md:text-xl font-bold mb-2" />,
-                                                h2: ({ node, ...props }) => <h2 {...props} className="text-base md:text-lg font-bold mb-2" />,
-                                                h3: ({ node, ...props }) => <h3 {...props} className="text-sm md:text-base font-bold mb-1" />
-                                            }}
-                                        >
-                                            {res.text}
-                                        </ReactMarkdown>
+            {/* Chat Area - only render when user is resolved */}
+            {chatReady ? (
+                <div
+                    ref={scrollRef}
+                    className="flex-1 overflow-y-auto px-4 py-8 md:px-6 custom-scrollbar"
+                >
+                    <div className="max-w-4xl mx-auto space-y-8">
+                        {allMessages.map((res, i) => (
+                            <div key={i} className={`flex ${res.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
+                                <div className={`group relative max-w-[85%] md:max-w-[75%] px-5 py-4 rounded-2xl shadow-sm dark:shadow-xl wrap-break-word ${res.role === 'user'
+                                    ? 'bg-blue-600 text-white rounded-tr-none'
+                                    : 'bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50 text-slate-900 dark:text-slate-200 rounded-tl-none backdrop-blur-sm'
+                                    }`}>
+                                    {res.role === 'agent' ? (
+                                        <div className="prose dark:prose-invert text-sm md:text-base max-w-none prose-p:leading-relaxed prose-pre:bg-slate-50 dark:prose-pre:bg-slate-950 prose-pre:border prose-pre:border-slate-200 dark:prose-pre:border-slate-700 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:font-bold hover:prose-a:underline transition-colors text-slate-800 dark:text-slate-100">
+                                            <ReactMarkdown
+                                                remarkPlugins={[remarkGfm]}
+                                                rehypePlugins={[rehypeRaw]}
+                                                components={{
+                                                    a: ({ node, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,
+                                                    p: ({ node, ...props }) => <p {...props} className="text-sm md:text-base leading-relaxed mb-2 last:mb-0" />,
+                                                    li: ({ node, ...props }) => <li {...props} className="text-sm md:text-base leading-relaxed" />,
+                                                    ul: ({ node, ...props }) => <ul {...props} className="list-disc pl-4 mb-2" />,
+                                                    ol: ({ node, ...props }) => <ol {...props} className="list-decimal pl-4 mb-2" />,
+                                                    h1: ({ node, ...props }) => <h1 {...props} className="text-lg md:text-xl font-bold mb-2" />,
+                                                    h2: ({ node, ...props }) => <h2 {...props} className="text-base md:text-lg font-bold mb-2" />,
+                                                    h3: ({ node, ...props }) => <h3 {...props} className="text-sm md:text-base font-bold mb-1" />
+                                                }}
+                                            >
+                                                {res.text}
+                                            </ReactMarkdown>
+                                        </div>
+                                    ) : (
+                                        <div className="whitespace-pre-wrap text-sm md:text-base leading-relaxed">{res.text}</div>
+                                    )}
+
+                                    <div className={`absolute -bottom-6 text-[10px] text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 ${res.role === 'user' ? 'right-0' : 'left-0'}`}>
+                                        <span className="font-bold uppercase tracking-tighter">{res.role === 'user' ? 'You' : 'Agent'}</span>
+                                        <span>•</span>
+                                        <span>{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                     </div>
-                                ) : (
-                                    <div className="whitespace-pre-wrap text-sm md:text-base leading-relaxed">{res.text}</div>
-                                )}
-
-                                <div className={`absolute -bottom-6 text-[10px] text-slate-500 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 ${res.role === 'user' ? 'right-0' : 'left-0'}`}>
-                                    <span className="font-bold uppercase tracking-tighter">{res.role === 'user' ? 'You' : 'Agent'}</span>
-                                    <span>•</span>
-                                    <span>{new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        ))}
 
-                    {loading && (
-                        <div className="flex justify-start">
-                            <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 p-5 rounded-2xl rounded-tl-none flex gap-3 items-center backdrop-blur-sm shadow-sm dark:shadow-none">
-                                <div className="flex gap-1.5">
-                                    <span className="w-2 h-2 bg-blue-400 dark:bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                                    <span className="w-2 h-2 bg-blue-400 dark:bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                                    <span className="w-2 h-2 bg-blue-400 dark:bg-blue-400 rounded-full animate-bounce"></span>
+                        {loading && (
+                            <div className="flex justify-start">
+                                <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 p-5 rounded-2xl rounded-tl-none flex gap-3 items-center backdrop-blur-sm shadow-sm dark:shadow-none">
+                                    <div className="flex gap-1.5">
+                                        <span className="w-2 h-2 bg-blue-400 dark:bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+                                        <span className="w-2 h-2 bg-blue-400 dark:bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+                                        <span className="w-2 h-2 bg-blue-400 dark:bg-blue-400 rounded-full animate-bounce"></span>
+                                    </div>
+                                    <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Processing request...</span>
                                 </div>
-                                <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Processing request...</span>
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    {!loading && !isTypingInitial && results.length > 0 && (
-                        <div className="flex justify-center pt-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-                            <button
-                                onClick={() => setIsModalOpen(true)}
-                                className="group flex items-center gap-2 text-red-500/60 hover:text-red-500 transition-all active:scale-95 text-[10px] font-bold uppercase"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:rotate-12 transition-transform"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                                <span className="group-hover:underline dark:text-white decoration-red-500/50 underline-offset-4">Clear chat history</span>
-                            </button>
-                        </div>
-                    )}
-                    
-                    {/* Dummy div for scrolling */}
-                    <div ref={messagesEndRef} />
+                        {!loading && !isTypingInitial && results.length > 0 && (
+                            <div className="flex justify-center pt-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                                <button
+                                    onClick={() => setIsModalOpen(true)}
+                                    className="group flex items-center gap-2 text-red-500/60 hover:text-red-500 transition-all active:scale-95 text-[10px] font-bold uppercase"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:rotate-12 transition-transform"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                    <span className="group-hover:underline dark:text-white decoration-red-500/50 underline-offset-4">Clear chat history</span>
+                                </button>
+                            </div>
+                        )}
+                        
+                        {/* Dummy div for scrolling */}
+                        <div ref={messagesEndRef} />
+                    </div>
                 </div>
-            </div>
+            ) : (
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="flex flex-col items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-linear-to-tr from-blue-500 to-purple-500 animate-pulse" />
+                        <p className="text-sm text-slate-400 dark:text-slate-500 font-medium">Setting up your experience...</p>
+                    </div>
+                </div>
+            )}
 
             {/* Onboarding Modal (first-time) */}
             <OnboardingModal
@@ -363,7 +383,7 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
             />
 
             {/* Fixed Input Bar */}
-            <div className="shrink-0 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 p-4 md:p-6 pb-8 md:pb-10 transition-all duration-300">
+            {chatReady && <div className="shrink-0 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 p-4 md:p-6 pb-8 md:pb-10 transition-all duration-300">
                 <div 
                     className={`max-w-4xl mx-auto flex flex-nowrap overflow-x-auto gap-2 px-2 pb-2 custom-scrollbar no-scrollbar md:flex-wrap md:overflow-visible transition-all duration-500 ease-in-out ${
                         !prompt.trim() 
@@ -415,7 +435,7 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                     </div>
                     <div>v1.0.4-stable</div>
                 </div>
-            </div>
+            </div>}
         </div>
     );
 };

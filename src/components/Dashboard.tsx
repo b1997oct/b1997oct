@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Users, MessageSquare, Activity, BarChart3, Sun, Moon, Monitor, Shield, ShieldOff, ArrowLeft } from 'lucide-react';
-import { ChatHistoryModal } from './ChatHistoryModal';
+import { ReadOnlyChatModal } from './ReadOnlyChatModal';
 import mermaid from 'mermaid';
 
 interface Stats {
@@ -172,6 +172,7 @@ export const Dashboard = () => {
                                         </td>
                                         <td className="px-6 py-3">
                                             <button
+                                                type="button"
                                                 onClick={() => setChatModal({ userId: u._id, username: u.username })}
                                                 className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-950 transition-colors text-xs font-bold"
                                             >
@@ -203,10 +204,9 @@ export const Dashboard = () => {
                 </div>
             </main>
 
-            {/* Chat History Modal */}
             {chatModal && (
-                <ChatHistoryModal
-                    isOpen={true}
+                <ReadOnlyChatModal
+                    isOpen
                     onClose={() => setChatModal(null)}
                     userId={chatModal.userId}
                     username={chatModal.username}
