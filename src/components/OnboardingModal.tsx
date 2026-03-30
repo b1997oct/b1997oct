@@ -160,7 +160,7 @@ export const OnboardingModal = ({ isOpen, onClose, editUser, onComplete }: Onboa
                 onComplete(result.user, result.sessionId);
             } else if (mode === 'edit') {
                 const editData = data as EditFormData;
-                const payload: Record<string, any> = {
+                const payload: Record<string, unknown> = {
                     userId: editUser!._id,
                     username: editData.username,
                     theme: editData.theme,
@@ -265,7 +265,7 @@ export const OnboardingModal = ({ isOpen, onClose, editUser, onComplete }: Onboa
                             )}
                         </div>
                         {errors.username && (
-                            <p className="mt-1 text-xs text-red-500">{(errors.username as any).message}</p>
+                            <p className="mt-1 text-xs text-red-500">{(errors.username as { message?: string }).message}</p>
                         )}
                     </div>
 
@@ -281,7 +281,7 @@ export const OnboardingModal = ({ isOpen, onClose, editUser, onComplete }: Onboa
                             className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
                         />
                         {errors.pin && (
-                            <p className="mt-1 text-xs text-red-500">{(errors.pin as any).message}</p>
+                            <p className="mt-1 text-xs text-red-500">{(errors.pin as { message?: string }).message}</p>
                         )}
                     </div>
 
@@ -336,7 +336,7 @@ export const OnboardingModal = ({ isOpen, onClose, editUser, onComplete }: Onboa
                         <p className="text-center text-xs text-slate-500 dark:text-slate-400">
                             {isLogin ? (
                                 <>
-                                    Don't have an account?{' '}
+                                    Don&apos;t have an account?{' '}
                                     <button type="button" onClick={() => switchMode('create')} className="text-blue-500 hover:text-blue-400 font-semibold">
                                         Create one
                                     </button>

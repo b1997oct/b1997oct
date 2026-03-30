@@ -338,6 +338,7 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                         {!loading && !isTypingInitial && results.length > 0 && (
                             <div className="flex justify-center pt-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
                                 <button
+                                    type="button"
                                     onClick={() => setIsModalOpen(true)}
                                     className="group flex items-center gap-2 text-red-500/60 hover:text-red-500 transition-all active:scale-95 text-[10px] font-bold uppercase"
                                 >
@@ -346,8 +347,7 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                                 </button>
                             </div>
                         )}
-                        
-                        {/* Dummy div for scrolling */}
+
                         <div ref={messagesEndRef} />
                     </div>
                 </div>
@@ -360,13 +360,11 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                 </div>
             )}
 
-            {/* Onboarding Modal (first-time) */}
             <OnboardingModal
                 isOpen={showOnboarding}
                 onComplete={handleOnboardingComplete}
             />
 
-            {/* Edit Profile Modal */}
             <OnboardingModal
                 isOpen={showEditProfile}
                 editUser={user}
@@ -374,7 +372,6 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                 onComplete={handleOnboardingComplete}
             />
 
-            {/* Confirm Reset Modal */}
             <ConfirmModal 
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
@@ -382,8 +379,8 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                 description="Resetting the chat will permanently clear your current conversation history from this session. You will start a fresh session with the agent."
             />
 
-            {/* Fixed Input Bar */}
-            {chatReady && <div className="shrink-0 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 p-4 md:p-6 pb-8 md:pb-10 transition-all duration-300">
+            {chatReady && (
+            <div className="shrink-0 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 p-4 md:p-6 pb-8 md:pb-10 transition-all duration-300">
                 <div 
                     className={`max-w-4xl mx-auto flex flex-nowrap overflow-x-auto gap-2 px-2 pb-2 custom-scrollbar no-scrollbar md:flex-wrap md:overflow-visible transition-all duration-500 ease-in-out ${
                         !prompt.trim() 
@@ -399,6 +396,7 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                         ].map((suggestion, idx) => (
                         <button
                             key={idx}
+                            type="button"
                             onClick={() => setPrompt(suggestion)}
                             className="shrink-0 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px] font-medium text-slate-600 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-200 dark:hover:border-blue-800 transition-all active:scale-95"
                         >
@@ -435,7 +433,8 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                     </div>
                     <div>v1.0.4-stable</div>
                 </div>
-            </div>}
+            </div>
+            )}
         </div>
     );
 };
