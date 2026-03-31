@@ -43,8 +43,34 @@ const readmeContent = fs.readFileSync(readmePath, "utf-8");
 			name="twitter:description"
 			content="Passionate about exploring AI & building AI Agents to solve real-world problems."
 		/>
+		<script is:inline>
+			const theme = (() => {
+				if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
+					return localStorage.getItem('theme');
+				}
+				if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+					return 'dark';
+				}
+				return 'light';
+			})();
+		
+			if (theme === 'light') {
+				document.documentElement.classList.remove('dark');
+			} else if (theme === 'dark') {
+				document.documentElement.classList.add('dark');
+			} else {
+				// system - already handled by logic above, but for clarity:
+				const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+				if (systemTheme === 'dark') {
+					document.documentElement.classList.add('dark');
+				} else {
+					document.documentElement.classList.remove('dark');
+				}
+			}
+			window.localStorage.setItem('theme', theme);
+		</script>
 	</head>
-	<body class="bg-slate-950 min-h-screen">
+	<body class="bg-white dark:bg-slate-950 min-h-screen transition-colors duration-300">
 		<AgentUI client:load initialMessage={readmeContent} />
 	</body>
 </html>

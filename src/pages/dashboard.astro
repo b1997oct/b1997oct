@@ -1,0 +1,44 @@
+---
+import { Dashboard as DashboardView } from "../components/Dashboard";
+import "../styles/global.css";
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+		<meta name="viewport" content="width=device-width" />
+		<meta name="generator" content={Astro.generator} />
+		<title>Dashboard | Agent_B1997</title>
+		<meta name="description" content="Public analytics dashboard for Agent_B1997" />
+		<script is:inline>
+			const theme = (() => {
+				if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
+					return localStorage.getItem('theme');
+				}
+				if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+					return 'dark';
+				}
+				return 'light';
+			})();
+
+			if (theme === 'light') {
+				document.documentElement.classList.remove('dark');
+			} else if (theme === 'dark') {
+				document.documentElement.classList.add('dark');
+			} else {
+				const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+				if (systemTheme === 'dark') {
+					document.documentElement.classList.add('dark');
+				} else {
+					document.documentElement.classList.remove('dark');
+				}
+			}
+			window.localStorage.setItem('theme', theme);
+		</script>
+	</head>
+	<body class="bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors duration-300">
+		<DashboardView client:load />
+	</body>
+</html>
