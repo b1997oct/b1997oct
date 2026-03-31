@@ -303,9 +303,14 @@ export const OnboardingModal = ({ isOpen, onClose, editUser, onComplete }: Onboa
 
                             <div className="flex items-center justify-between py-2">
                                 <div>
-                                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                                        Agent Control
-                                    </label>
+                                    <div className="flex items-center gap-2">
+                                        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                                            Agent Control
+                                        </label>
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[10px] font-bold uppercase tracking-wide border border-slate-200 dark:border-slate-700">
+                                            Coming soon
+                                        </span>
+                                    </div>
                                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                                         Allow the agent to perform actions like clicks
                                     </p>

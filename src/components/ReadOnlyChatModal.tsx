@@ -60,8 +60,8 @@ export const ReadOnlyChatModal = ({ isOpen, onClose, userId, username }: ReadOnl
                         >
                             <ArrowLeft size={20} strokeWidth={2.5} />
                         </button>
-                        <h2 className="text-base font-bold text-slate-900 dark:text-white truncate">{username}</h2>
                     </div>
+                    <h2 className="text-base font-bold text-slate-900 dark:text-white truncate">{username}</h2>
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-200 text-[10px] font-bold uppercase tracking-wide border border-amber-200 dark:border-amber-900 shrink-0">
                         <Eye size={12} />
                         Read only
@@ -108,11 +108,10 @@ export const ReadOnlyChatModal = ({ isOpen, onClose, userId, username }: ReadOnl
                                         className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
                                     >
                                         <div
-                                            className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm wrap-break-word ${
-                                                isUser
+                                            className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm wrap-break-word ${isUser
                                                     ? 'bg-blue-600 text-white rounded-tr-none'
                                                     : 'bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50 text-slate-900 dark:text-slate-200 rounded-tl-none'
-                                            }`}
+                                                }`}
                                         >
                                             {isUser ? (
                                                 <div className="whitespace-pre-wrap leading-relaxed">{msg.content}</div>
@@ -148,6 +147,21 @@ export const ReadOnlyChatModal = ({ isOpen, onClose, userId, username }: ReadOnl
                 </div>
 
                 <footer className="shrink-0 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/80 px-4 py-3">
+                    <div className="max-w-2xl mx-auto mb-3">
+                        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/40 px-3 py-2">
+                            <div className="flex items-center gap-2">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[10px] font-bold uppercase tracking-wide border border-slate-200 dark:border-slate-700">
+                                    Coming soon
+                                </span>
+                                <span className="text-xs font-semibold text-slate-900 dark:text-slate-100">
+                                    Agent Control
+                                </span>
+                            </div>
+                            <p className="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
+                                Allow the agent to perform actions like clicks
+                            </p>
+                        </div>
+                    </div>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 text-center">
                         Dashboard preview only. Users continue chats from the main app after signing in.
                     </p>
