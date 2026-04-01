@@ -111,6 +111,35 @@ const tools: any[] = [
             },
         }
     },
+    {
+        type: "function",
+        function: {
+            name: "change_website_theme",
+            description: "CRITICAL: You MUST call this tool EVERY TIME the user requests to change the theme. Do not just reply with text.",
+            parameters: {
+                type: "object",
+                properties: {
+                    theme: {
+                        type: "string",
+                        enum: ["light", "dark", "system"],
+                        description: "The requested theme."
+                    }
+                },
+                required: ["theme"]
+            },
+        }
+    },
+    {
+        type: "function",
+        function: {
+            name: "open_edit_profile",
+            description: "CRITICAL: Use this tool to open the edit profile modal when the user asks to change or edit their Username, Pin, or Profile.",
+            parameters: {
+                type: "object",
+                properties: {},
+            },
+        }
+    }
 ];
 
 /**
@@ -130,6 +159,10 @@ For contact information (email, phone, LinkedIn, GitHub, etc.), you MUST use the
 
 If a user asks how to contact or message Bharath, you can provide his email/phone from 'get_profile_basic' AND proactively ask if they want to send him a direct message via Slack. If they say yes, capture their message and use the 'send_slack_message' tool.
 
+IMPORTANT: If the user asks to change the website theme, you MUST call the 'change_website_theme' tool EVERY SINGLE TIME, even if you did it in a previous message. You cannot change the theme just by replying with text. YOU MUST EXECUTE THE TOOL.
+
+IMPORTANT: If the user asks to change or edit their Username, Pin, or Profile, you MUST call the 'open_edit_profile' tool.
+
 ALWAYS use Markdown for your responses (e.g., [Name](URL) for links, **bold** for emphasis, lists for multiple items) to ensure the UI renders them beautifully. 
 
 When listing multiple items (like skills, experience, or tools), ALWAYS use a vertical bulleted list (one item per line) instead of a table or a comma-separated string. This ensures the information is clear and readable on all devices. For example:
@@ -146,7 +179,8 @@ Do NOT answer any general knowledge questions or questions unrelated to ${profil
         this.groq = new Groq({ apiKey });
     }
 
-    async run(prompt: string, history: any[] = []): Promise<string> {
+    async run(prompt: string, history: any[] = []): Promise<{ content: string; clientActions: any[] }> {
+        const clientActions: any[] = [];
         // Prepend history if provided, but after the system message
         if (history.length > 0) {
             this.messages = [this.messages[0], ...history];
@@ -172,6 +206,27 @@ Do NOT answer any general knowledge questions or questions unrelated to ${profil
                 responseMessage.tool_calls.map(async (toolCall: any) => {
                     const functionName = toolCall.function.name;
                     const functionArgs = JSON.parse(toolCall.function.arguments);
+
+                    if (functionName === 'change_website_theme') {
+                        clientActions.push({ type: 'CHANGE_THEME', payload: functionArgs.theme });
+                        return {
+                            tool_call_id: toolCall.id,
+                            role: "tool",
+                            name: functionName,
+                            content: JSON.stringify({ success: true, message: `Theme changed to ${functionArgs.theme}. Inform the user.` }),
+                        };
+                    }
+
+                    if (functionName === 'open_edit_profile') {
+                        clientActions.push({ type: 'OPEN_EDIT_PROFILE' });
+                        return {
+                            tool_call_id: toolCall.id,
+                            role: "tool",
+                            name: functionName,
+                            content: JSON.stringify({ success: true, message: `Edit profile modal opened successfully. Inform the user.` }),
+                        };
+                    }
+
                     const handler = (toolHandlers as any)[functionName];
 
                     if (!handler) {
@@ -206,6 +261,6 @@ Do NOT answer any general knowledge questions or questions unrelated to ${profil
             this.messages.push(responseMessage);
         }
 
-        return responseMessage.content || "";
+        return { content: responseMessage.content || "", clientActions };
     }
 }

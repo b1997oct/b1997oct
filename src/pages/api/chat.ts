@@ -74,7 +74,7 @@ export const POST: APIRoute = async ({ request }) => {
         }
 
         const agent = new GroqAgent(apiKey);
-        const response = await agent.run(prompt, historyMessages);
+        const { content: response, clientActions } = await agent.run(prompt, historyMessages);
 
         // Save updated history back to MongoDB if sessionId is active
         if (sessionId && db) {
@@ -102,7 +102,7 @@ export const POST: APIRoute = async ({ request }) => {
             }
         }
 
-        return Response.json({ response });
+        return Response.json({ response, clientActions });
     } catch (error: any) {
         console.error("Agent Error:", error);
         return Response.json({

@@ -1,7 +1,8 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Users, MessageSquare, Activity, BarChart3, Sun, Moon, Monitor, Shield, ShieldOff, ArrowLeft } from 'lucide-react';
 import { ReadOnlyChatModal } from './ReadOnlyChatModal';
 import mermaid from 'mermaid';
+import moment from 'moment';
 
 interface Stats {
     totalUsers: number;
@@ -80,6 +81,15 @@ export const Dashboard = () => {
             .finally(() => setLoading(false));
     }, []);
 
+    const sortedUsers = useMemo(() => {
+        const time = (iso: string) => {
+            const t = new Date(iso).getTime();
+            return Number.isFinite(t) ? t : -Infinity;
+        };
+
+        return [...users].sort((a, b) => time(b.createdAt) - time(a.createdAt));
+    }, [users]);
+
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-950">
@@ -143,7 +153,7 @@ export const Dashboard = () => {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
-                                {users.map((u) => (
+                                {sortedUsers.map((u) => (
                                     <tr key={u._id} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                                         <td className="px-6 py-3">
                                             <div className="flex items-center gap-2">
@@ -181,7 +191,13 @@ export const Dashboard = () => {
                                             </button>
                                         </td>
                                         <td className="px-6 py-3 text-slate-500 dark:text-slate-400 text-xs">
-                                            {new Date(u.createdAt).toLocaleDateString()}
+                                            {moment(u.createdAt).isValid() ? (
+                                                <span title={moment(u.createdAt).format('YYYY-MM-DD HH:mm')}>
+                                                    {moment(u.createdAt).fromNow()}
+                                                </span>
+                                            ) : (
+                                                '—'
+                                            )}
                                         </td>
                                     </tr>
                                 ))}
