@@ -212,6 +212,7 @@ export const OnboardingModal = ({ isOpen, onClose, editUser, onComplete }: Onboa
     const submitLabel = isSubmitting
         ? (isEdit ? 'Saving...' : isLogin ? 'Logging in...' : 'Creating...')
         : (isEdit ? 'Save Changes' : isLogin ? 'Log In' : 'Get Started');
+    const clientControlToggleId = isEdit ? 'edit-client-control-toggle' : 'client-control-toggle';
 
     return (
         <div
@@ -301,25 +302,20 @@ export const OnboardingModal = ({ isOpen, onClose, editUser, onComplete }: Onboa
                                 </select>
                             </div>
 
-                            <div className="flex items-center justify-between py-2">
+                            <label htmlFor={clientControlToggleId} className="flex items-center justify-between py-2">
                                 <div>
-                                    <div className="flex items-center gap-2">
-                                        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                                            Agent Control
-                                        </label>
-                                        <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[10px] font-bold uppercase tracking-wide border border-slate-200 dark:border-slate-700">
-                                            Coming soon
-                                        </span>
+                                    <div className="block cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-300">
+                                        Agent Control
                                     </div>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                    <div className="mt-0.5 block cursor-pointer text-xs text-slate-500 dark:text-slate-400">
                                         Allow the agent to perform actions like clicks
-                                    </p>
+                                    </div>
                                 </div>
                                 <label className="relative inline-flex items-center cursor-pointer">
-                                    <input id="client-control-toggle" type="checkbox" {...register('client_control')} className="sr-only peer" />
+                                    <input id={clientControlToggleId} type="checkbox" {...register('client_control')} className="sr-only peer" />
                                     <div className="w-11 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500/50 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:inset-s-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                                 </label>
-                            </div>
+                            </label>
                         </>
                     )}
 
