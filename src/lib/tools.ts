@@ -65,14 +65,14 @@ export const toolHandlers = {
 
     get_best_friends: async () => {
         console.log(`[Tools] Calling get_best_friends`);
-        return { 
+        return {
             best_friends: [
-                "Cursor 🤖 (The AI Code Editor)",
+                "Claude 🧠 (The Reasoning Expert)",
                 "ChatGPT 💬 (The Conversationalist)",
                 "n8n ⚡ (The Automation Hub)",
-                "Claude 🧠 (The Reasoning Expert)",
+                "Cursor 🤖 (The AI Code Editor)",
                 "v0 🎨 (The UI Visionary)"
-            ] 
+            ]
         };
     }
 };

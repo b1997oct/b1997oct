@@ -6,12 +6,8 @@ import { UserProfile } from './UserProfile';
 import { OnboardingModal } from './OnboardingModal';
 import { ConfirmModal } from './ConfirmModal';
 
-interface UserData {
-    _id: string;
-    username: string;
-    theme: 'light' | 'dark' | 'system';
-    client_control: boolean;
-}
+import { useUserStore } from '../store/userStore';
+import type { UserData, Theme } from '../store/userStore';
 
 interface AgentUIProps {
     initialMessage?: string;
@@ -26,7 +22,7 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
     const [historyLoaded, setHistoryLoaded] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [sessionId, setSessionId] = useState<string | null>(null);
-    const [user, setUser] = useState<UserData | null>(null);
+    const { user, setUser, theme, setTheme, applyThemeToDOM } = useUserStore();
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [showEditProfile, setShowEditProfile] = useState(false);
     const [userChecked, setUserChecked] = useState(false);
@@ -37,7 +33,7 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
         if (scrollRef.current) {
             const scrollContainer = scrollRef.current;
             const behavior = smooth ? 'smooth' : 'auto';
-            
+
             const doScroll = () => {
                 scrollContainer.scrollTo({
                     top: scrollContainer.scrollHeight,
@@ -64,9 +60,6 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                 .then(data => {
                     if (data.user) {
                         setUser(data.user);
-                        const theme = data.user.theme || 'system';
-                        localStorage.setItem('theme', theme);
-                        applyThemeToDOM(theme);
                     } else {
                         setShowOnboarding(true);
                     }
@@ -82,30 +75,19 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
         }
     }, []);
 
-    const applyThemeToDOM = (theme: string) => {
-        const root = document.documentElement;
-        const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const effective = theme === 'system' ? (systemDark ? 'dark' : 'light') : theme;
-        if (effective === 'dark') {
-            root.classList.add('dark');
-        } else {
-            root.classList.remove('dark');
-        }
-    };
+
 
     const handleOnboardingComplete = (userData: { _id: string; username: string; theme: string; client_control: boolean }, restoredSessionId?: string | null) => {
         const u: UserData = {
             _id: userData._id,
             username: userData.username,
-            theme: userData.theme as UserData['theme'],
+            theme: userData.theme as Theme,
             client_control: userData.client_control,
         };
         setUser(u);
         setShowOnboarding(false);
         setShowEditProfile(false);
         localStorage.setItem('user_id', u._id);
-        localStorage.setItem('theme', u.theme);
-        applyThemeToDOM(u.theme);
 
         if (restoredSessionId) {
             localStorage.setItem('chat_session_id', restoredSessionId);
@@ -116,13 +98,13 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
         }
     };
 
-    const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
+    const handleThemeChange = (newTheme: Theme) => {
+        setTheme(newTheme);
         if (user) {
-            setUser({ ...user, theme });
             fetch('/api/user', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: user._id, theme }),
+                body: JSON.stringify({ userId: user._id, theme: newTheme }),
             }).catch(console.error);
         }
     };
@@ -246,7 +228,30 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
             });
 
             const data = await response.json();
-            setResults(prev => [...prev, { role: 'agent', text: data.response || 'No response from agent.' }]);
+            let responseText = data.response || 'No response from agent.';
+
+            if (data.clientActions && data.clientActions.length > 0) {
+                if (user?.client_control) {
+                    data.clientActions.forEach((action: any) => {
+                        if (action.type === 'CHANGE_THEME') {
+                            handleThemeChange(action.payload);
+                        } else if (action.type === 'OPEN_EDIT_PROFILE') {
+                            setTimeout(() => setShowEditProfile(true), 1000);
+                        }
+                    });
+                } else {
+                    responseText += '\n\n*(System action blocked: AI Client Control is disabled in your settings.)*';
+                    // Open the modal after reading delay, and focus the input after mount delay
+                    setTimeout(() => {
+                        setShowEditProfile(true);
+                        setTimeout(() => {
+                            document.getElementById('client-control-toggle')?.focus();
+                        }, 500); 
+                    }, 1500);
+                }
+            }
+
+            setResults(prev => [...prev, { role: 'agent', text: responseText }]);
         } catch (err) {
             setResults(prev => [...prev, { role: 'agent', text: 'Error: Could not connect to agent.' }]);
         } finally {
@@ -268,7 +273,7 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                     {user && (
                         <UserProfile
                             username={user.username}
-                            theme={user.theme}
+                            theme={theme}
                             onThemeChange={handleThemeChange}
                             onEditProfile={() => setShowEditProfile(true)}
                         />
@@ -342,7 +347,7 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                                     onClick={() => setIsModalOpen(true)}
                                     className="group flex items-center gap-2 text-red-500/60 hover:text-red-500 transition-all active:scale-95 text-[10px] font-bold uppercase"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:rotate-12 transition-transform"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="group-hover:rotate-12 transition-transform"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></svg>
                                     <span className="group-hover:underline dark:text-white decoration-red-500/50 underline-offset-4">Clear chat history</span>
                                 </button>
                             </div>
@@ -372,7 +377,7 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                 onComplete={handleOnboardingComplete}
             />
 
-            <ConfirmModal 
+            <ConfirmModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onConfirm={handleReset}
@@ -380,60 +385,59 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
             />
 
             {chatReady && (
-            <div className="shrink-0 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 p-4 md:p-6 pb-8 md:pb-10 transition-all duration-300">
-                <div 
-                    className={`max-w-4xl mx-auto flex flex-nowrap overflow-x-auto gap-2 px-2 pb-2 custom-scrollbar no-scrollbar md:flex-wrap md:overflow-visible transition-all duration-500 ease-in-out ${
-                        !prompt.trim() 
-                            ? 'max-h-20 opacity-100 mb-4 scale-100 translate-y-0' 
-                            : 'max-h-0 opacity-0 mb-0 scale-95 -translate-y-4 pointer-events-none'
-                    }`}
-                >
-                    {[
-                        "Who are your best friends?",
-                        "What are your top skills?",
-                        "Tell me about your projects",
-                        "How can I contact you?"
+                <div className="shrink-0 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 p-4 md:p-6 pb-8 md:pb-10 transition-all duration-300">
+                    <div
+                        className={`max-w-4xl mx-auto flex flex-nowrap overflow-x-auto gap-2 px-2 pb-2 custom-scrollbar no-scrollbar md:flex-wrap md:overflow-visible transition-all duration-500 ease-in-out ${!prompt.trim()
+                                ? 'max-h-20 opacity-100 mb-4 scale-100 translate-y-0'
+                                : 'max-h-0 opacity-0 mb-0 scale-95 -translate-y-4 pointer-events-none'
+                            }`}
+                    >
+                        {[
+                            "Who are your best friends?",
+                            "What are your top skills?",
+                            "Tell me about your projects",
+                            "How can I contact you?"
                         ].map((suggestion, idx) => (
-                        <button
-                            key={idx}
-                            type="button"
-                            onClick={() => setPrompt(suggestion)}
-                            className="shrink-0 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px] font-medium text-slate-600 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-200 dark:hover:border-blue-800 transition-all active:scale-95"
-                        >
-                            {suggestion}
-                        </button>
-                    ))}
-                </div>
-                <form onSubmit={handleSubmit} className="max-w-4xl mx-auto relative group">
-                    <input
-                        type="text"
-                        value={prompt}
-                        onChange={(e) => setPrompt(e.target.value)}
-                        placeholder="Ask Question..."
-                        className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl pl-6 pr-32 py-4 md:py-5 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-md dark:shadow-lg text-sm md:text-base"
-                    />
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2 pr-2">
-                        <button
-                            type="submit"
-                            disabled={loading || isTypingInitial || !prompt.trim()}
-                            className="bg-blue-600 hover:bg-blue-500 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-500 px-6 py-2.5 md:py-3 rounded-xl font-bold transition-all active:scale-95 flex items-center justify-center min-w-[80px] text-white"
-                        >
-                            {loading ? (
-                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            ) : (
-                                'Send'
-                            )}
-                        </button>
+                            <button
+                                key={idx}
+                                type="button"
+                                onClick={() => setPrompt(suggestion)}
+                                className="shrink-0 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px] font-medium text-slate-600 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-200 dark:hover:border-blue-800 transition-all active:scale-95"
+                            >
+                                {suggestion}
+                            </button>
+                        ))}
                     </div>
-                </form>
-                <div className="max-w-4xl mx-auto mt-3 flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-600 uppercase tracking-widest font-bold px-2">
-                    <div className="flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                        Neural Link Established
+                    <form onSubmit={handleSubmit} className="max-w-4xl mx-auto relative group">
+                        <input
+                            type="text"
+                            value={prompt}
+                            onChange={(e) => setPrompt(e.target.value)}
+                            placeholder="Ask Question..."
+                            className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl pl-6 pr-32 py-4 md:py-5 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-md dark:shadow-lg text-sm md:text-base"
+                        />
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2 pr-2">
+                            <button
+                                type="submit"
+                                disabled={loading || isTypingInitial || !prompt.trim()}
+                                className="bg-blue-600 hover:bg-blue-500 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-500 px-6 py-2.5 md:py-3 rounded-xl font-bold transition-all active:scale-95 flex items-center justify-center min-w-[80px] text-white"
+                            >
+                                {loading ? (
+                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                ) : (
+                                    'Send'
+                                )}
+                            </button>
+                        </div>
+                    </form>
+                    <div className="max-w-4xl mx-auto mt-3 flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-600 uppercase tracking-widest font-bold px-2">
+                        <div className="flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                            Neural Link Established
+                        </div>
+                        <div>v1.0.4-stable</div>
                     </div>
-                    <div>v1.0.4-stable</div>
                 </div>
-            </div>
             )}
         </div>
     );
