@@ -139,6 +139,32 @@ const tools: any[] = [
                 properties: {},
             },
         }
+    },
+    {
+        type: "function",
+        function: {
+            name: "clear_chat",
+            description: "CRITICAL: Use this tool to open the clear chat confirmation modal when the user asks to clear, reset, or delete the chat history.",
+            parameters: {
+                type: "object",
+                properties: {},
+            },
+        }
+    },
+    {
+        type: "function",
+        function: {
+            name: "open_link",
+            description: "CRITICAL: Use this tool to navigate or open a link when requested. For external links (e.g. LinkedIn, GitHub), set new_tab to true. For internal routes (e.g. /dashboard), set new_tab to false.",
+            parameters: {
+                type: "object",
+                properties: {
+                    url: { type: "string", description: "The URL or path to open." },
+                    new_tab: { type: "boolean", description: "True to open in a new tab, false to navigate in the current tab." }
+                },
+                required: ["url", "new_tab"],
+            },
+        }
     }
 ];
 
@@ -162,6 +188,10 @@ If a user asks how to contact or message Bharath, you can provide his email/phon
 IMPORTANT: If the user asks to change the website theme, you MUST call the 'change_website_theme' tool EVERY SINGLE TIME, even if you did it in a previous message. You cannot change the theme just by replying with text. YOU MUST EXECUTE THE TOOL.
 
 IMPORTANT: If the user asks to change or edit their Username, Pin, or Profile, you MUST call the 'open_edit_profile' tool.
+
+IMPORTANT: If the user asks to clear, reset, or delete the chat history, you MUST call the 'clear_chat' tool.
+
+IMPORTANT: If the user asks to open a link, navigate to a dashboard, view LinkedIn, etc., you MUST call the 'open_link' tool.
 
 ALWAYS use Markdown for your responses (e.g., [Name](URL) for links, **bold** for emphasis, lists for multiple items) to ensure the UI renders them beautifully. 
 
@@ -224,6 +254,26 @@ Do NOT answer any general knowledge questions or questions unrelated to ${profil
                             role: "tool",
                             name: functionName,
                             content: JSON.stringify({ success: true, message: `Edit profile modal opened successfully. Inform the user.` }),
+                        };
+                    }
+
+                    if (functionName === 'clear_chat') {
+                        clientActions.push({ type: 'CLEAR_CHAT' });
+                        return {
+                            tool_call_id: toolCall.id,
+                            role: "tool",
+                            name: functionName,
+                            content: JSON.stringify({ success: true, message: `Clear chat confirmation modal opened successfully. Inform the user.` }),
+                        };
+                    }
+
+                    if (functionName === 'open_link') {
+                        clientActions.push({ type: 'OPEN_LINK', payload: { url: functionArgs.url, new_tab: functionArgs.new_tab } });
+                        return {
+                            tool_call_id: toolCall.id,
+                            role: "tool",
+                            name: functionName,
+                            content: JSON.stringify({ success: true, message: `Navigated to ${functionArgs.url} successfully. Inform the user.` }),
                         };
                     }
 

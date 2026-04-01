@@ -8,6 +8,7 @@ import { ConfirmModal } from './ConfirmModal';
 
 import { useUserStore } from '../store/userStore';
 import type { UserData, Theme } from '../store/userStore';
+import { navigate } from 'astro:transitions/client';
 
 interface AgentUIProps {
     initialMessage?: string;
@@ -107,6 +108,28 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                 body: JSON.stringify({ userId: user._id, theme: newTheme }),
             }).catch(console.error);
         }
+    };
+
+    const handleInlineClientControlToggle = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const checked = e.target.checked;
+        if (!user) return;
+        setUser({ ...user, client_control: checked });
+        try {
+            await fetch('/api/user', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: user._id, client_control: checked }),
+            });
+        } catch (err) {
+            console.error(err);
+            setUser({ ...user, client_control: !checked });
+        }
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('user_id');
+        localStorage.removeItem('chat_session_id');
+       window.location.reload();
     };
 
     // Initialize Session ID only after user is resolved (not during onboarding)
@@ -237,23 +260,27 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                             handleThemeChange(action.payload);
                         } else if (action.type === 'OPEN_EDIT_PROFILE') {
                             setTimeout(() => setShowEditProfile(true), 1000);
+                        } else if (action.type === 'CLEAR_CHAT') {
+                            setTimeout(() => setIsModalOpen(true), 1000);
+                        } else if (action.type === 'OPEN_LINK') {
+                            setTimeout(() => {
+                                const { url, new_tab } = action.payload;
+                                if (new_tab) {
+                                    window.open(url, '_blank', 'noopener,noreferrer');
+                                } else {
+                                   navigate(url);
+                                }
+                            }, 1000);
                         }
                     });
                 } else {
-                    responseText += '\n\n*(System action blocked: AI Client Control is disabled in your settings.)*';
-                    // Open the modal after reading delay, and focus the input after mount delay
-                    setTimeout(() => {
-                        setShowEditProfile(true);
-                        setTimeout(() => {
-                            document.getElementById('client-control-toggle')?.focus();
-                        }, 500); 
-                    }, 1500);
+                    responseText += '\n\n*(System action blocked: AI Client Control is disabled.)*';
                 }
             }
 
             setResults(prev => [...prev, { role: 'agent', text: responseText }]);
-        } catch (err) {
-            setResults(prev => [...prev, { role: 'agent', text: 'Error: Could not connect to agent.' }]);
+        } catch (err:any) {
+            setResults(prev => [...prev, { role: 'agent', text: "500 : " + err.message }]);
         } finally {
             setLoading(false);
         }
@@ -276,6 +303,7 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                             theme={theme}
                             onThemeChange={handleThemeChange}
                             onEditProfile={() => setShowEditProfile(true)}
+                            onLogout={handleLogout}
                         />
                     )}
                     <div className="hidden md:block text-xs text-slate-400 dark:text-slate-500 font-mono tracking-widest uppercase">Neural Interface</div>
@@ -296,23 +324,25 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                                     : 'bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50 text-slate-900 dark:text-slate-200 rounded-tl-none backdrop-blur-sm'
                                     }`}>
                                     {res.role === 'agent' ? (
-                                        <div className="prose dark:prose-invert text-sm md:text-base max-w-none prose-p:leading-relaxed prose-pre:bg-slate-50 dark:prose-pre:bg-slate-950 prose-pre:border prose-pre:border-slate-200 dark:prose-pre:border-slate-700 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:font-bold hover:prose-a:underline transition-colors text-slate-800 dark:text-slate-100">
-                                            <ReactMarkdown
-                                                remarkPlugins={[remarkGfm]}
-                                                rehypePlugins={[rehypeRaw]}
-                                                components={{
-                                                    a: ({ node, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,
-                                                    p: ({ node, ...props }) => <p {...props} className="text-sm md:text-base leading-relaxed mb-2 last:mb-0" />,
-                                                    li: ({ node, ...props }) => <li {...props} className="text-sm md:text-base leading-relaxed" />,
-                                                    ul: ({ node, ...props }) => <ul {...props} className="list-disc pl-4 mb-2" />,
-                                                    ol: ({ node, ...props }) => <ol {...props} className="list-decimal pl-4 mb-2" />,
-                                                    h1: ({ node, ...props }) => <h1 {...props} className="text-lg md:text-xl font-bold mb-2" />,
-                                                    h2: ({ node, ...props }) => <h2 {...props} className="text-base md:text-lg font-bold mb-2" />,
-                                                    h3: ({ node, ...props }) => <h3 {...props} className="text-sm md:text-base font-bold mb-1" />
-                                                }}
-                                            >
-                                                {res.text}
-                                            </ReactMarkdown>
+                                        <div className="flex flex-col">
+                                            <div className="prose dark:prose-invert text-sm md:text-base max-w-none prose-p:leading-relaxed prose-pre:bg-slate-50 dark:prose-pre:bg-slate-950 prose-pre:border prose-pre:border-slate-200 dark:prose-pre:border-slate-700 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:font-bold hover:prose-a:underline transition-colors text-slate-800 dark:text-slate-100">
+                                                <ReactMarkdown
+                                                    remarkPlugins={[remarkGfm]}
+                                                    rehypePlugins={[rehypeRaw]}
+                                                    components={{
+                                                        a: ({ node, ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />,
+                                                        p: ({ node, ...props }) => <p {...props} className="text-sm md:text-base leading-relaxed mb-2 last:mb-0" />,
+                                                        li: ({ node, ...props }) => <li {...props} className="text-sm md:text-base leading-relaxed" />,
+                                                        ul: ({ node, ...props }) => <ul {...props} className="list-disc pl-4 mb-2" />,
+                                                        ol: ({ node, ...props }) => <ol {...props} className="list-decimal pl-4 mb-2" />,
+                                                        h1: ({ node, ...props }) => <h1 {...props} className="text-lg md:text-xl font-bold mb-2" />,
+                                                        h2: ({ node, ...props }) => <h2 {...props} className="text-base md:text-lg font-bold mb-2" />,
+                                                        h3: ({ node, ...props }) => <h3 {...props} className="text-sm md:text-base font-bold mb-1" />
+                                                    }}
+                                                >
+                                                    {res.text}
+                                                </ReactMarkdown>
+                                            </div>
                                         </div>
                                     ) : (
                                         <div className="whitespace-pre-wrap text-sm md:text-base leading-relaxed">{res.text}</div>
@@ -341,7 +371,19 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                         )}
 
                         {!loading && !isTypingInitial && results.length > 0 && (
-                            <div className="flex justify-center pt-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                            <div className="flex flex-col items-center pt-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                                <div className={`flex items-center gap-4 justify-between w-full max-w-xs md:max-w-sm p-3 rounded-xl border mb-6 transition-colors ${user?.client_control ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/50' : 'bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-900/50'}`}>
+                                    <div className="flex flex-col">
+                                        <span className={`text-xs font-bold uppercase tracking-wide ${user?.client_control ? 'text-emerald-700 dark:text-emerald-400' : 'text-orange-700 dark:text-orange-400'}`}>
+                                            {user?.client_control ? 'Agent Control Enabled' : 'Agent Control Disabled'}
+                                        </span>
+                                    </div>
+                                    <label className="relative inline-flex items-center cursor-pointer shrink-0" title="Toggle Agent Control">
+                                        <input type="checkbox" checked={user?.client_control || false} onChange={handleInlineClientControlToggle} className="sr-only peer" />
+                                        <div className={`w-11 h-6 rounded-full peer peer-focus:outline-none peer-focus:ring-2 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:inset-s-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${user?.client_control ? 'bg-emerald-200/50 dark:bg-emerald-900/50 peer-focus:ring-emerald-500/50 after:border-emerald-300 peer-checked:bg-emerald-500' : 'bg-orange-200/50 dark:bg-orange-900/50 peer-focus:ring-orange-500/50 after:border-orange-300 peer-checked:bg-orange-500'}`}></div>
+                                    </label>
+                                </div>
+
                                 <button
                                     type="button"
                                     onClick={() => setIsModalOpen(true)}

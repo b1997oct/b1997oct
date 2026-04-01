@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { User, Sun, Moon, Monitor, ChevronDown, Settings } from 'lucide-react';
+import { User, Sun, Moon, Monitor, ChevronDown, Settings, LogOut } from 'lucide-react';
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -8,9 +8,10 @@ interface UserProfileProps {
     theme: Theme;
     onThemeChange: (theme: Theme) => void;
     onEditProfile?: () => void;
+    onLogout?: () => void;
 }
 
-export const UserProfile = ({ username, theme, onThemeChange, onEditProfile }: UserProfileProps) => {
+export const UserProfile = ({ username, theme, onThemeChange, onEditProfile, onLogout }: UserProfileProps) => {
     const [open, setOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -101,6 +102,20 @@ export const UserProfile = ({ username, theme, onThemeChange, onEditProfile }: U
                             </button>
                         ))}
                     </div>
+                    {onLogout && (
+                        <div className="p-2 border-t border-slate-100 dark:border-slate-800 mt-1">
+                            <button
+                                onClick={() => {
+                                    onLogout();
+                                    setOpen(false);
+                                }}
+                                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/50 transition-all font-medium"
+                            >
+                                <LogOut size={14} />
+                                <span>Log Out</span>
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
         </div>
