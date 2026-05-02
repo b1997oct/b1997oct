@@ -1,65 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import { Moon, Sun } from 'lucide-react';
+import { useThemeStore } from '../store/themeStore';
 
-type Theme = 'light' | 'dark' | 'system';
+export const ThemeToggle = () => {
+    const resolved = useThemeStore((s) => s.resolved);
+    const toggle = useThemeStore((s) => s.toggle);
 
-export function ThemeToggle() {
-  const [theme, setTheme] = useState<Theme>('system');
+    const isDark = resolved === 'dark';
 
-  useEffect(() => {
-    // Initial load
-    const savedTheme = localStorage.getItem('theme') as Theme | null;
-    const themeToApply = savedTheme || 'system';
-    setTheme(themeToApply);
-    applyTheme(themeToApply);
-
-    // Watch system theme changes
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleSystemThemeChange = () => {
-      const currentTheme = localStorage.getItem('theme') as Theme | 'system';
-      if (currentTheme === 'system' || !currentTheme) {
-        applyTheme('system');
-      }
-    };
-
-    mediaQuery.addEventListener('change', handleSystemThemeChange);
-    return () => mediaQuery.removeEventListener('change', handleSystemThemeChange);
-  }, []);
-
-  const applyTheme = (newTheme: Theme) => {
-    const root = document.documentElement;
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    const effectiveTheme = newTheme === 'system' ? systemTheme : newTheme;
-
-    if (effectiveTheme === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
-    
-    localStorage.setItem('theme', newTheme);
-  };
-
-  const handleThemeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newTheme = e.target.value as Theme;
-    setTheme(newTheme);
-    applyTheme(newTheme);
-  };
-
-  return (
-    <div className="flex items-center gap-2">
-      <label htmlFor="theme-select" className="hidden md:block text-sm font-medium text-slate-700 dark:text-slate-300">
-        Theme
-      </label>
-      <select
-        id="theme-select"
-        value={theme}
-        onChange={handleThemeChange}
-        className="bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-1.5"
-      >
-        <option value="light">Light</option>
-        <option value="dark">Dark</option>
-        <option value="system">System</option>
-      </select>
-    </div>
-  );
-}
+    return (
+        <button
+            type="button"
+            onClick={() => toggle()}
+            className="rounded-lg border border-slate-200 bg-white p-2 text-slate-700 transition hover:bg-slate-100 active:scale-95 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+            aria-label={isDark ? 'Switch to light theme' : 'Switch to dark theme'}
+        >
+            {isDark ? <Sun size={16} /> : <Moon size={16} />}
+        </button>
+    );
+};

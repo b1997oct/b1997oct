@@ -4,40 +4,33 @@ import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
 import { ArrowLeft, Eye, MessageSquare } from 'lucide-react';
 
-interface ChatSession {
-    sessionId: string;
-    messages: { role: string; content: string }[];
-    expiresAt: string;
-}
-
 interface ReadOnlyChatModalProps {
     isOpen: boolean;
     onClose: () => void;
-    userId: string;
-    username: string;
+    sessionId: string;
 }
 
-export const ReadOnlyChatModal = ({ isOpen, onClose, userId, username }: ReadOnlyChatModalProps) => {
-    const [sessions, setSessions] = useState<ChatSession[]>([]);
-    const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+interface ChatMessage {
+    role: string;
+    content: string;
+}
+
+export const ReadOnlyChatModal = ({ isOpen, onClose, sessionId }: ReadOnlyChatModalProps) => {
+    const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        if (!isOpen || !userId) return;
+        if (!isOpen || !sessionId) return;
 
         setLoading(true);
-        fetch(`/api/admin/chat-history?userId=${encodeURIComponent(userId)}`)
+        fetch(`/api/admin/chat-history?sessionId=${encodeURIComponent(sessionId)}`)
             .then((res) => res.json())
             .then((data) => {
-                const list: ChatSession[] = data.sessions || [];
-                setSessions(list);
-                setActiveSessionId(list.length > 0 ? list[0].sessionId : null);
+                setMessages(data.messages || []);
             })
             .catch(console.error)
             .finally(() => setLoading(false));
-    }, [isOpen, userId]);
-
-    const activeSession = sessions.find((s) => s.sessionId === activeSessionId) ?? null;
+    }, [isOpen, sessionId]);
 
     if (!isOpen) return null;
 
@@ -61,32 +54,14 @@ export const ReadOnlyChatModal = ({ isOpen, onClose, userId, username }: ReadOnl
                             <ArrowLeft size={20} strokeWidth={2.5} />
                         </button>
                     </div>
-                    <h2 className="text-base font-bold text-slate-900 dark:text-white truncate">{username}</h2>
+                    <h2 className="text-base font-bold text-slate-900 dark:text-white truncate font-mono">
+                        {sessionId.slice(0, 8)}…
+                    </h2>
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-200 text-[10px] font-bold uppercase tracking-wide border border-amber-200 dark:border-amber-900 shrink-0">
                         <Eye size={12} />
                         Read only
                     </span>
                 </header>
-
-                {sessions.length > 1 && (
-                    <div className="shrink-0 px-4 py-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50">
-                        <label className="sr-only" htmlFor="readonly-session-select">
-                            Conversation
-                        </label>
-                        <select
-                            id="readonly-session-select"
-                            value={activeSessionId ?? ''}
-                            onChange={(e) => setActiveSessionId(e.target.value)}
-                            className="w-full text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-900 dark:text-slate-100"
-                        >
-                            {sessions.map((s, i) => (
-                                <option key={s.sessionId} value={s.sessionId}>
-                                    Session {i + 1} · {s.messages.length} messages · {s.sessionId.slice(0, 8)}…
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                )}
 
                 <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 custom-scrollbar">
                     <div className="max-w-2xl mx-auto space-y-4">
@@ -94,13 +69,13 @@ export const ReadOnlyChatModal = ({ isOpen, onClose, userId, username }: ReadOnl
                             <div className="flex justify-center py-12">
                                 <div className="w-8 h-8 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
                             </div>
-                        ) : !activeSession || activeSession.messages.length === 0 ? (
+                        ) : messages.length === 0 ? (
                             <div className="text-center py-12 text-slate-500 dark:text-slate-400 text-sm flex flex-col items-center gap-2">
                                 <MessageSquare size={28} className="opacity-40" />
-                                No messages in this conversation
+                                No messages in this session
                             </div>
                         ) : (
-                            activeSession.messages.map((msg, i) => {
+                            messages.map((msg, i) => {
                                 const isUser = msg.role === 'user';
                                 return (
                                     <div
@@ -109,8 +84,8 @@ export const ReadOnlyChatModal = ({ isOpen, onClose, userId, username }: ReadOnl
                                     >
                                         <div
                                             className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm wrap-break-word ${isUser
-                                                    ? 'bg-blue-600 text-white rounded-tr-none'
-                                                    : 'bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50 text-slate-900 dark:text-slate-200 rounded-tl-none'
+                                                ? 'bg-blue-600 text-white rounded-tr-none'
+                                                : 'bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50 text-slate-900 dark:text-slate-200 rounded-tl-none'
                                                 }`}
                                         >
                                             {isUser ? (
@@ -147,18 +122,8 @@ export const ReadOnlyChatModal = ({ isOpen, onClose, userId, username }: ReadOnl
                 </div>
 
                 <footer className="shrink-0 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/80 px-4 py-3">
-                    <div className="max-w-2xl mx-auto mb-3">
-                        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-900/40 px-3 py-2">
-                            <div className="text-xs font-semibold text-slate-900 dark:text-slate-100">
-                                Agent Control
-                            </div>
-                            <p className="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
-                                Allow the agent to perform actions like clicks
-                            </p>
-                        </div>
-                    </div>
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 text-center">
-                        Dashboard preview only. Users continue chats from the main app after signing in.
+                        Read-only preview of a guest chat session.
                     </p>
                 </footer>
             </div>

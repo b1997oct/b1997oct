@@ -3,26 +3,21 @@ import { connectToDatabase } from '../../../lib/db';
 
 export const GET: APIRoute = async ({ request }) => {
     const url = new URL(request.url);
-    const userId = url.searchParams.get('userId');
+    const sessionId = url.searchParams.get('sessionId');
 
-    if (!userId) {
-        return Response.json({ error: 'userId is required' }, { status: 400 });
+    if (!sessionId) {
+        return Response.json({ error: 'sessionId is required' }, { status: 400 });
     }
 
     try {
         const { db } = await connectToDatabase();
-        const chatDocs = await db.collection('chats')
-            .find({ userId })
-            .sort({ expiresAt: -1 })
-            .toArray();
+        const doc = await db.collection('chats').findOne({ sessionId });
 
-        const sessions = chatDocs.map((doc) => ({
-            sessionId: doc.sessionId,
-            messages: doc.messages || [],
-            expiresAt: doc.expiresAt,
-        }));
-
-        return Response.json({ sessions });
+        return Response.json({
+            sessionId,
+            messages: doc?.messages || [],
+            expiresAt: doc?.expiresAt ?? null,
+        });
     } catch (error: any) {
         return Response.json({ error: error.message }, { status: 500 });
     }

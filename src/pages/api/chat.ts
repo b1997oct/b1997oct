@@ -24,7 +24,7 @@ export const GET: APIRoute = async ({ request }) => {
 };
 
 export const POST: APIRoute = async ({ request }) => {
-    const { prompt, sessionId, userId, saveOnly, messages } = await request.json();
+    const { prompt, sessionId, saveOnly, messages } = await request.json();
 
     if (saveOnly && sessionId && messages) {
         try {
@@ -34,7 +34,6 @@ export const POST: APIRoute = async ({ request }) => {
                 {
                     $set: {
                         messages: messages,
-                        userId: userId || null,
                         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
                     }
                 },
@@ -91,7 +90,6 @@ export const POST: APIRoute = async ({ request }) => {
                     {
                         $set: {
                             messages: updatedMessages,
-                            userId: userId || null,
                             expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
                         }
                     },

@@ -114,29 +114,31 @@ const tools: any[] = [
     {
         type: "function",
         function: {
-            name: "change_website_theme",
-            description: "CRITICAL: You MUST call this tool EVERY TIME the user requests to change the theme. Do not just reply with text.",
+            name: "toggle_website_theme",
+            description:
+                "Switch the site between light and dark (the only two themes). Use immediately when the request is vague: e.g. change theme, switch theme, toggle theme, flip appearance, suggestion 'Change theme'. Do NOT ask the user which theme—they only have toggle or explicit requests.",
             parameters: {
                 type: "object",
-                properties: {
-                    theme: {
-                        type: "string",
-                        enum: ["light", "dark", "system"],
-                        description: "The requested theme."
-                    }
-                },
-                required: ["theme"]
+                properties: {},
             },
         }
     },
     {
         type: "function",
         function: {
-            name: "open_edit_profile",
-            description: "CRITICAL: Use this tool to open the edit profile modal when the user asks to change or edit their Username, Pin, or Profile.",
+            name: "change_website_theme",
+            description:
+                "Set the site to light or dark explicitly. Use ONLY when the user clearly names one: e.g. 'switch to light', 'use dark mode', 'make it light'. If they are vague, use toggle_website_theme instead. You MUST call the tool; do not change theme with text alone.",
             parameters: {
                 type: "object",
-                properties: {},
+                properties: {
+                    theme: {
+                        type: "string",
+                        enum: ["light", "dark"],
+                        description: "Either light or dark.",
+                    }
+                },
+                required: ["theme"]
             },
         }
     },
@@ -148,21 +150,6 @@ const tools: any[] = [
             parameters: {
                 type: "object",
                 properties: {},
-            },
-        }
-    },
-    {
-        type: "function",
-        function: {
-            name: "open_link",
-            description: "CRITICAL: Use this tool to navigate or open a link when requested. For external links (e.g. LinkedIn, GitHub), set new_tab to true. For internal routes (e.g. /dashboard), set new_tab to false.",
-            parameters: {
-                type: "object",
-                properties: {
-                    url: { type: "string", description: "The URL or path to open." },
-                    new_tab: { type: "boolean", description: "True to open in a new tab, false to navigate in the current tab." }
-                },
-                required: ["url", "new_tab"],
             },
         }
     }
@@ -185,13 +172,9 @@ For contact information (email, phone, LinkedIn, GitHub, etc.), you MUST use the
 
 If a user asks how to contact or message Bharath, you can provide his email/phone from 'get_profile_basic' AND proactively ask if they want to send him a direct message via Slack. If they say yes, capture their message and use the 'send_slack_message' tool.
 
-IMPORTANT: If the user asks to change the website theme, you MUST call the 'change_website_theme' tool EVERY SINGLE TIME, even if you did it in a previous message. You cannot change the theme just by replying with text. YOU MUST EXECUTE THE TOOL.
-
-IMPORTANT: If the user asks to change or edit their Username, Pin, or Profile, you MUST call the 'open_edit_profile' tool.
+IMPORTANT — theme (light/dark only): NEVER ask "which theme" or offering choices. Generic requests ('change theme', 'toggle theme', suggestion chip, etc.) → call 'toggle_website_theme' immediately. Explicit requests naming one mode ('dark mode', 'switch to light', 'make it dark') → call 'change_website_theme' with light or dark. You MUST execute a tool each time—text alone cannot change the theme. After any theme tool succeeds, say the theme was **changed** in one short sentence. Do not use the word toggled.
 
 IMPORTANT: If the user asks to clear, reset, or delete the chat history, you MUST call the 'clear_chat' tool.
-
-IMPORTANT: If the user asks to open a link, navigate to a dashboard, view LinkedIn, etc., you MUST call the 'open_link' tool.
 
 ALWAYS use Markdown for your responses (e.g., [Name](URL) for links, **bold** for emphasis, lists for multiple items) to ensure the UI renders them beautifully. 
 
@@ -237,23 +220,29 @@ Do NOT answer any general knowledge questions or questions unrelated to ${profil
                     const functionName = toolCall.function.name;
                     const functionArgs = JSON.parse(toolCall.function.arguments);
 
+                    if (functionName === 'toggle_website_theme') {
+                        clientActions.push({ type: 'TOGGLE_THEME' });
+                        return {
+                            tool_call_id: toolCall.id,
+                            role: "tool",
+                            name: functionName,
+                            content: JSON.stringify({
+                                success: true,
+                                message: "The theme was changed. Reply in one short sentence; say the theme was changed. Do not use the word toggled.",
+                            }),
+                        };
+                    }
+
                     if (functionName === 'change_website_theme') {
                         clientActions.push({ type: 'CHANGE_THEME', payload: functionArgs.theme });
                         return {
                             tool_call_id: toolCall.id,
                             role: "tool",
                             name: functionName,
-                            content: JSON.stringify({ success: true, message: `Theme changed to ${functionArgs.theme}. Inform the user.` }),
-                        };
-                    }
-
-                    if (functionName === 'open_edit_profile') {
-                        clientActions.push({ type: 'OPEN_EDIT_PROFILE' });
-                        return {
-                            tool_call_id: toolCall.id,
-                            role: "tool",
-                            name: functionName,
-                            content: JSON.stringify({ success: true, message: `Edit profile modal opened successfully. Inform the user.` }),
+                            content: JSON.stringify({
+                                success: true,
+                                message: `The theme was changed to ${functionArgs.theme}. Reply briefly; say the theme was changed. Do not use the word toggled.`,
+                            }),
                         };
                     }
 
@@ -264,16 +253,6 @@ Do NOT answer any general knowledge questions or questions unrelated to ${profil
                             role: "tool",
                             name: functionName,
                             content: JSON.stringify({ success: true, message: `Clear chat confirmation modal opened successfully. Inform the user.` }),
-                        };
-                    }
-
-                    if (functionName === 'open_link') {
-                        clientActions.push({ type: 'OPEN_LINK', payload: { url: functionArgs.url, new_tab: functionArgs.new_tab } });
-                        return {
-                            tool_call_id: toolCall.id,
-                            role: "tool",
-                            name: functionName,
-                            content: JSON.stringify({ success: true, message: `Navigated to ${functionArgs.url} successfully. Inform the user.` }),
                         };
                     }
 

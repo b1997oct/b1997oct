@@ -3,32 +3,45 @@ import { getSecret } from 'astro:env/server';
 
 let cachedClient: MongoClient | null = null;
 let cachedDb: Db | null = null;
+let connecting: Promise<{ client: MongoClient; db: Db }> | null = null;
 
 export async function connectToDatabase() {
-    const uri = getSecret("MONGODB_URI");
-    if (!uri) {
-        throw new Error("MONGODB_URI is not set in environment variables.");
-    }
-
     if (cachedClient && cachedDb) {
         return { client: cachedClient, db: cachedDb };
     }
 
-    const client = new MongoClient(uri, {
-        tls: true,
-        tlsAllowInvalidCertificates: false,
-    });
-    await client.connect();
-    const db = client.db();
+    if (!connecting) {
+        connecting = (async () => {
+            const uri = getSecret("MONGODB_URI");
+            if (!uri) {
+                throw new Error("MONGODB_URI is not set in environment variables.");
+            }
 
-    const chatsCollection = db.collection('chats');
-    await chatsCollection.createIndex({ "expiresAt": 1 }, { expireAfterSeconds: 0 });
+            const client = new MongoClient(uri, {
+                tls: true,
+                tlsAllowInvalidCertificates: false,
+                serverSelectionTimeoutMS: 10_000,
+                connectTimeoutMS: 10_000,
+            });
+            await client.connect();
+            const db = client.db();
 
-    const usersCollection = db.collection('users');
-    await usersCollection.createIndex({ username: 1 }, { unique: true });
+            const chatsCollection = db.collection('chats');
+            await chatsCollection.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
-    cachedClient = client;
-    cachedDb = db;
+            cachedClient = client;
+            cachedDb = db;
+            return { client, db };
+        })().finally(() => {
+            connecting = null;
+        });
+    }
 
-    return { client, db };
+    try {
+        return await connecting;
+    } catch (e) {
+        cachedClient = null;
+        cachedDb = null;
+        throw e;
+    }
 }

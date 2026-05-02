@@ -1,76 +1,69 @@
 ---
 import { AgentUI } from "../components/AgentUI";
 import "../styles/global.css";
-import fs from "node:fs";
-import path from "node:path";
 
-const readmePath = path.resolve("./README.md");
-const readmeContent = fs.readFileSync(readmePath, "utf-8");
+const siteOrigin = Astro.url.origin;
+const canonicalURL = new URL(Astro.url.pathname, siteOrigin);
+const ogImageURL = new URL("/logo.png", siteOrigin);
+const pageTitle = "Barath | AI Agents · Agent_B7";
+const pageDescription =
+	"Hi, I'm Barath. Chat with Agent_B7—an AI assistant for exploring ideas, tooling, and real-world workflows. Passionate about Generative AI, LLMs, LangChain, and RAG.";
 ---
 
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
+		<link rel="canonical" href={canonicalURL.href} />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/png" href="/logo.png" />
+		<link rel="apple-touch-icon" href="/logo.png" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="generator" content={Astro.generator} />
-		<title>Barath | AI Agents</title>
-		<meta
-			name="description"
-			content="Hi, I'm Barath. Passionate about exploring AI & building AI Agents to solve real-world problems. Skills include Generative AI, LLMs, LangChain, and RAG."
-		/>
+		<meta name="theme-color" content="#020617" media="(prefers-color-scheme: dark)" />
+		<meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)" />
+		<title>{pageTitle}</title>
+		<meta name="description" content={pageDescription} />
 		<meta
 			name="keywords"
-			content="Barath, AI, AI Agents, LLM, Generative AI, LangChain, Prompt Engineering, Machine Learning, Portfolio"
+			content="Barath, Agent_B7, AI, AI Agents, LLM, Generative AI, LangChain, RAG, Prompt Engineering, Machine Learning, Portfolio, Chatbot"
 		/>
 		<meta name="author" content="Barath" />
+		<meta name="robots" content="index, follow" />
+
+		<meta property="og:site_name" content="Agent_B7" />
+		<meta property="og:title" content={pageTitle} />
+		<meta property="og:description" content={pageDescription} />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content={canonicalURL.href} />
+		<meta property="og:locale" content="en_US" />
+		<meta property="og:image" content={ogImageURL.href} />
+		<meta property="og:image:type" content="image/png" />
 		<meta
-			property="og:title"
-			content="Barath | AI Agents"
+			property="og:image:alt"
+			content="Agent_B7 logo — vibrant gradient four-pointed star on a dark background"
 		/>
-		<meta
-			property="og:description"
-			content="Passionate about exploring AI & building AI Agents to solve real-world problems. Check out my portfolio and projects."
-		/>
-		<meta property="og:type" content="profile" />
-		<meta name="twitter:card" content="summary" />
-		<meta
-			name="twitter:title"
-			content="Barath | AI Agents"
-		/>
-		<meta
-			name="twitter:description"
-			content="Passionate about exploring AI & building AI Agents to solve real-world problems."
-		/>
+
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={pageTitle} />
+		<meta name="twitter:description" content={pageDescription} />
+		<meta name="twitter:image" content={ogImageURL.href} />
 		<script is:inline>
-			const theme = (() => {
-				if (typeof localStorage !== 'undefined' && localStorage.getItem('theme')) {
-					return localStorage.getItem('theme');
-				}
-				if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-					return 'dark';
-				}
-				return 'light';
-			})();
-		
-			if (theme === 'light') {
-				document.documentElement.classList.remove('dark');
-			} else if (theme === 'dark') {
-				document.documentElement.classList.add('dark');
-			} else {
-				// system - already handled by logic above, but for clarity:
-				const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-				if (systemTheme === 'dark') {
-					document.documentElement.classList.add('dark');
-				} else {
-					document.documentElement.classList.remove('dark');
-				}
+			const stored = typeof localStorage !== 'undefined' ? localStorage.getItem('theme') : null;
+			const resolved =
+				stored === 'light' || stored === 'dark'
+					? stored
+					: window.matchMedia('(prefers-color-scheme: dark)').matches
+						? 'dark'
+						: 'light';
+
+			document.documentElement.classList.toggle('dark', resolved === 'dark');
+			if (stored === 'light' || stored === 'dark') {
+				window.localStorage.setItem('theme', resolved);
 			}
-			window.localStorage.setItem('theme', theme);
 		</script>
 	</head>
 	<body class="bg-white dark:bg-slate-950 min-h-screen transition-colors duration-300">
-		<AgentUI client:load initialMessage={readmeContent} />
+		<AgentUI client:load />
 	</body>
 </html>

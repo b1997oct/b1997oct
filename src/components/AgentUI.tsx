@@ -1,34 +1,39 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
-import { UserProfile } from './UserProfile';
-import { OnboardingModal } from './OnboardingModal';
+import { Loader2, SendHorizontal } from 'lucide-react';
 import { ConfirmModal } from './ConfirmModal';
+import { FloatingBotAssistant } from './FloatingBotAssistant';
+import { ThemeToggle } from './ThemeToggle';
 
-import { useUserStore } from '../store/userStore';
-import type { UserData, Theme } from '../store/userStore';
-import { navigate } from 'astro:transitions/client';
+import { useThemeStore } from '../store/themeStore';
 
-interface AgentUIProps {
-    initialMessage?: string;
-}
+type Message = { role: 'user' | 'agent'; text: string };
 
-export const AgentUI = ({ initialMessage }: AgentUIProps) => {
+/** Shared max width for header, message thread, and composer */
+const CHAT_MAX = 'max-w-4xl mx-auto w-full';
+
+export const AgentUI = () => {
     const [prompt, setPrompt] = useState('');
-    const [results, setResults] = useState<{ role: 'user' | 'agent', text: string }[]>([]);
-    const [isTypingInitial, setIsTypingInitial] = useState(false);
-    const [displayedInitial, setDisplayedInitial] = useState('');
+    const [results, setResults] = useState<Message[]>([]);
     const [loading, setLoading] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [sessionId, setSessionId] = useState<string | null>(null);
-    const { user, setUser, theme, setTheme } = useUserStore();
-    const [showOnboarding, setShowOnboarding] = useState(false);
-    const [showEditProfile, setShowEditProfile] = useState(false);
-    const [userChecked, setUserChecked] = useState(false);
-    const pendingPromptRef = useRef<string | null>(null);
+    const setTheme = useThemeStore((s) => s.setTheme);
+    const toggleTheme = useThemeStore((s) => s.toggle);
+    const seededRef = useRef(false);
     const scrollRef = useRef<HTMLDivElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    const adjustComposerHeight = useCallback(() => {
+        const el = textareaRef.current;
+        if (!el) return;
+        el.style.height = 'auto';
+        const max = 168;
+        el.style.height = `${Math.min(el.scrollHeight, max)}px`;
+    }, []);
 
     const scrollToBottom = (smooth = false) => {
         if (scrollRef.current) {
@@ -38,7 +43,7 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
             const doScroll = () => {
                 scrollContainer.scrollTo({
                     top: scrollContainer.scrollHeight,
-                    behavior
+                    behavior,
                 });
             };
 
@@ -50,322 +55,164 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
         }
     };
 
-    // Load user from localStorage on mount (guests skip onboarding until first send or header)
-    useEffect(() => {
-        const storedUserId = localStorage.getItem('user_id');
-        if (storedUserId) {
-            fetch(`/api/user?userId=${storedUserId}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.user) {
-                        setUser(data.user);
-                    } else {
-                        localStorage.removeItem('user_id');
-                    }
-                    setUserChecked(true);
-                })
-                .catch(() => {
-                    localStorage.removeItem('user_id');
-                    setUserChecked(true);
-                });
-        } else {
-            setUserChecked(true);
-        }
-    }, [setUser]);
-
-    const handleThemeChange = (newTheme: Theme) => {
-        setTheme(newTheme);
-        const u = useUserStore.getState().user;
-        if (u) {
-            fetch('/api/user', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: u._id, theme: newTheme }),
-            }).catch(console.error);
-        }
-    };
-
-    const applyAgentResponse = (data: { response?: string; clientActions?: any[] }, actingUser: UserData | null) => {
-        let responseText = data.response || 'No response from agent.';
-        const clientControl = actingUser?.client_control;
+    const applyAgentResponse = (data: { response?: string; clientActions?: any[] }) => {
+        const responseText = data.response || 'No response from agent.';
 
         if (data.clientActions && data.clientActions.length > 0) {
-            if (clientControl) {
-                data.clientActions.forEach((action: any) => {
-                    if (action.type === 'CHANGE_THEME') {
-                        handleThemeChange(action.payload);
-                    } else if (action.type === 'OPEN_EDIT_PROFILE') {
-                        setTimeout(() => setShowEditProfile(true), 1000);
-                    } else if (action.type === 'CLEAR_CHAT') {
-                        setTimeout(() => setIsModalOpen(true), 1000);
-                    } else if (action.type === 'OPEN_LINK') {
-                        setTimeout(() => {
-                            const { url, new_tab } = action.payload;
-                            if (new_tab) {
-                                window.open(url, '_blank', 'noopener,noreferrer');
-                            } else {
-                                navigate(url);
-                            }
-                        }, 1000);
-                    }
-                });
-            } else {
-                responseText += '\n\n*(System action blocked: AI Client Control is disabled.)*';
-            }
+            data.clientActions.forEach((action: any) => {
+                if (action.type === 'CHANGE_THEME') {
+                    const next = action.payload === 'dark' ? 'dark' : 'light';
+                    setTheme(next);
+                } else if (action.type === 'TOGGLE_THEME') {
+                    toggleTheme();
+                } else if (action.type === 'CLEAR_CHAT') {
+                    setTimeout(() => setIsModalOpen(true), 1000);
+                }
+            });
         }
 
-        setResults(prev => [...prev, { role: 'agent', text: responseText }]);
+        setResults((prev) => [...prev, { role: 'agent', text: responseText }]);
     };
 
-    const submitChatMessage = async (userMsg: string, actingUser: UserData | null) => {
+    const submitChatMessage = async (userMsg: string, sid: string) => {
         setLoading(true);
         try {
-            const sid = sessionId ?? localStorage.getItem('chat_session_id');
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     prompt: userMsg,
                     sessionId: sid,
-                    userId: actingUser?._id,
                 }),
             });
 
             const data = await response.json();
-            applyAgentResponse(data, actingUser);
+            applyAgentResponse(data);
         } catch (err: unknown) {
             const message = err instanceof Error ? err.message : String(err);
-            setResults(prev => [...prev, { role: 'agent', text: '500 : ' + message }]);
+            setResults((prev) => [...prev, { role: 'agent', text: '500 : ' + message }]);
         } finally {
             setLoading(false);
         }
     };
 
-    const handleOnboardingComplete = (
-        userData: { _id: string; username: string; theme: string; client_control: boolean },
-        restoredSessionId?: string | null
-    ) => {
-        const queued = pendingPromptRef.current;
-        pendingPromptRef.current = null;
-
-        const u: UserData = {
-            _id: userData._id,
-            username: userData.username,
-            theme: userData.theme as Theme,
-            client_control: userData.client_control,
-        };
-        setUser(u);
-        setShowOnboarding(false);
-        setShowEditProfile(false);
-        localStorage.setItem('user_id', u._id);
-
-        if (restoredSessionId) {
-            localStorage.setItem('chat_session_id', restoredSessionId);
-            setSessionId(restoredSessionId);
-            setResults([]);
-            setDisplayedInitial('');
-        }
-
-        if (queued) {
-            queueMicrotask(async () => {
-                setResults(prev => [...prev, { role: 'user', text: queued }]);
-                await Promise.resolve();
-                await submitChatMessage(queued, u);
-            });
-        }
-    };
-
-    const handleCreateOnboardingClose = () => {
-        setShowOnboarding(false);
-        const p = pendingPromptRef.current;
-        pendingPromptRef.current = null;
-        if (p) setPrompt(p);
-    };
-
-    const handleInlineClientControlToggle = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const checked = e.target.checked;
-        if (!user) return;
-        setUser({ ...user, client_control: checked });
-        try {
-            await fetch('/api/user', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: user._id, client_control: checked }),
-            });
-        } catch (err) {
-            console.error(err);
-            setUser({ ...user, client_control: !checked });
-        }
-    };
-
-    const handleLogout = () => {
-        localStorage.removeItem('user_id');
-        localStorage.removeItem('chat_session_id');
-        window.location.reload();
-    };
-
-    // Session ID once user resolution finished (guests included)
     useEffect(() => {
-        if (!userChecked) return;
         let id = localStorage.getItem('chat_session_id');
         if (!id) {
             id = crypto.randomUUID();
             localStorage.setItem('chat_session_id', id);
         }
         setSessionId(id);
-    }, [userChecked]);
+    }, []);
 
-    // Load history when session ID is set
     useEffect(() => {
         if (!sessionId) return;
+        seededRef.current = false;
 
         const loadHistory = async () => {
             try {
                 const res = await fetch(`/api/chat?sessionId=${sessionId}`);
                 const data = await res.json();
                 if (data.messages && data.messages.length > 0) {
-                    const mappedMessages = data.messages.map((m: any) => ({
+                    const mappedMessages: Message[] = data.messages.map((m: any) => ({
                         role: m.role === 'assistant' ? 'agent' : 'user',
-                        text: m.content || m.text
+                        text: m.content || m.text,
                     }));
                     setResults(mappedMessages);
-                    setIsTypingInitial(false);
-                } else if (initialMessage) {
-                    setResults([{ role: 'user', text: 'show profile' }]);
-                    setIsTypingInitial(true);
+                } else if (!seededRef.current) {
+                    seededRef.current = true;
+                    const seed = 'who are you?';
+                    setResults([{ role: 'user', text: seed }]);
+                    await submitChatMessage(seed, sessionId);
                 }
             } catch (err) {
-                console.error("Failed to load history:", err);
+                console.error('Failed to load history:', err);
             }
         };
 
         loadHistory();
-    }, [sessionId, initialMessage]);
+    }, [sessionId]);
 
     const handleReset = () => {
         const newId = crypto.randomUUID();
         localStorage.setItem('chat_session_id', newId);
-        setSessionId(newId);
         setResults([]);
-        setDisplayedInitial('');
-        setIsTypingInitial(true);
         setIsModalOpen(false);
+        setSessionId(newId);
     };
 
-    // Initial message typing effect
     useEffect(() => {
-        if (!initialMessage || !isTypingInitial) return;
-
-        let index = 0;
-        const interval = setInterval(() => {
-            if (index < initialMessage.length) {
-                setDisplayedInitial(initialMessage.slice(0, index + 1));
-                index++;
-            } else {
-                const agentMsg = { role: 'agent' as const, text: initialMessage };
-                setResults(prev => {
-                    const newResults = [...prev, agentMsg];
-                    if (sessionId) {
-                        fetch('/api/chat', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                sessionId,
-                                userId: user?._id,
-                                saveOnly: true,
-                                messages: newResults.map(m => ({
-                                    role: m.role === 'agent' ? 'assistant' : 'user',
-                                    content: m.text
-                                }))
-                            })
-                        }).catch(err => console.error("Failed to save initial history:", err));
-                    }
-                    return newResults;
-                });
-                setIsTypingInitial(false);
-                clearInterval(interval);
-            }
-        }, 1);
-
-        return () => clearInterval(interval);
-    }, [initialMessage, isTypingInitial, sessionId, user?._id]);
-
-    const chatUnlocked = userChecked;
-
-    const allMessages = [
-        ...results,
-        ...(isTypingInitial ? [{ role: 'agent' as const, text: displayedInitial }] : [])
-    ];
+        scrollToBottom(true);
+    }, [results, loading]);
 
     useEffect(() => {
-        scrollToBottom(!isTypingInitial);
-    }, [allMessages, loading, isTypingInitial]);
+        adjustComposerHeight();
+    }, [prompt, adjustComposerHeight]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (loading || isTypingInitial || !prompt.trim()) return;
+    const sendMessage = useCallback(async () => {
+        if (loading || !prompt.trim() || !sessionId) return;
 
         const userMsg = prompt.trim();
-
-        if (!user) {
-            pendingPromptRef.current = userMsg;
-            setShowOnboarding(true);
-            setPrompt('');
-            return;
-        }
-
         setPrompt('');
-        setResults(prev => [...prev, { role: 'user', text: userMsg }]);
-        await submitChatMessage(userMsg, user);
+        setResults((prev) => [...prev, { role: 'user', text: userMsg }]);
+        await submitChatMessage(userMsg, sessionId);
+    }, [loading, prompt, sessionId]);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        void sendMessage();
     };
 
+    const handleComposerKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key !== 'Enter' || e.shiftKey) return;
+        e.preventDefault();
+        void sendMessage();
+    };
+
+    const chatUnlocked = !!sessionId;
+
     return (
-        <div className="flex flex-col h-screen max-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-hidden transition-colors duration-300">
-            <header className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-md z-10 shrink-0">
-                <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-linear-to-tr from-blue-500 to-purple-500 animate-pulse" />
-                    <h1 className="text-xl md:text-2xl font-bold bg-linear-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
-                        Agent_B7
-                    </h1>
-                </div>
-                <div className="flex items-center gap-3 md:gap-4">
-                    {!user && userChecked && (
-                        <button
-                            type="button"
-                            onClick={() => setShowOnboarding(true)}
-                            className="text-xs md:text-sm font-semibold px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-500 transition-colors active:scale-95"
-                        >
-                            Sign in / Register
-                        </button>
-                    )}
-                    {user && (
-                        <UserProfile
-                            username={user.username}
-                            theme={theme}
-                            onThemeChange={handleThemeChange}
-                            onEditProfile={() => setShowEditProfile(true)}
-                            onLogout={handleLogout}
-                        />
-                    )}
-                    <div className="hidden md:block text-xs text-slate-400 dark:text-slate-500 font-mono tracking-widest uppercase">Neural Interface</div>
+        <div className="relative flex flex-col h-screen max-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-hidden transition-colors duration-300">
+            {/* Frosted glass — styles in global.css (.glass-header) so blur reads through content */}
+            <header className="glass-header fixed inset-x-0 top-0 z-30 min-h-14 shrink-0">
+                <div className="px-4 pt-2 pb-2 md:px-5">
+                    <div className={`${CHAT_MAX} flex items-center justify-between`}>
+                        <div className="flex items-center min-h-9">
+                            <img
+                                src="/logo.png"
+                                alt=""
+                                width={32}
+                                height={32}
+                                className={`h-10 w-10 shrink-0 object-contain motion-reduce:animate-none ${loading ? 'animate-spin' : ''}`}
+                                decoding="async"
+                            />
+                            <h1 className="text-base md:text-lg font-bold tracking-tight bg-linear-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
+                                Agent_B7
+                            </h1>
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <ThemeToggle />
+                        </div>
+                    </div>
                 </div>
             </header>
 
+            <div className="flex min-h-0 flex-1 flex-col pt-14">
             {chatUnlocked ? (
                 <div
                     ref={scrollRef}
-                    className="flex-1 overflow-y-auto px-4 py-8 md:px-6 custom-scrollbar"
+                    className="flex-1 overflow-y-auto px-4 md:px-5 py-6 md:py-8 custom-scrollbar min-h-0 [-webkit-overflow-scrolling:touch]"
                 >
-                    <div className="max-w-4xl mx-auto space-y-8">
-                        {allMessages.map((res, i) => (
+                    <div className={`${CHAT_MAX} space-y-8`}>
+                        {results.map((res, i) => (
                             <div key={i} className={`flex ${res.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
                                 <div className={`group relative max-w-[85%] md:max-w-[75%] px-5 py-4 rounded-2xl shadow-sm dark:shadow-xl wrap-break-word ${res.role === 'user'
-                                    ? 'bg-blue-600 text-white rounded-tr-none'
-                                    : 'bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/50 text-slate-900 dark:text-slate-200 rounded-tl-none backdrop-blur-sm'
+                                    ? 'rounded-tr-none bg-linear-to-br from-violet-600 to-indigo-600 text-white shadow-violet-500/20 dark:shadow-violet-900/30'
+                                    : 'rounded-tl-none border border-emerald-200/70 bg-linear-to-br from-emerald-50/90 via-white to-slate-50/80 text-slate-900 backdrop-blur-sm dark:border-emerald-900/35 dark:bg-linear-to-br dark:from-emerald-950/25 dark:via-slate-900/95 dark:to-slate-950/90 dark:text-slate-100'
                                     }`}>
                                     {res.role === 'agent' ? (
                                         <div className="flex flex-col">
-                                            <div className="prose dark:prose-invert text-sm md:text-base max-w-none prose-p:leading-relaxed prose-pre:bg-slate-50 dark:prose-pre:bg-slate-950 prose-pre:border prose-pre:border-slate-200 dark:prose-pre:border-slate-700 prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:font-bold hover:prose-a:underline transition-colors text-slate-800 dark:text-slate-100">
+                                            <div className="prose dark:prose-invert prose-headings:text-slate-900 dark:prose-headings:text-slate-50 text-sm md:text-base max-w-none prose-p:leading-relaxed prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-strong:text-slate-900 dark:prose-strong:text-slate-100 prose-code:text-emerald-800 dark:prose-code:text-emerald-200 prose-code:bg-emerald-100/80 dark:prose-code:bg-emerald-950/60 prose-code:px-1 prose-code:py-px prose-code:rounded-md prose-code:before:content-none prose-code:after:content-none prose-pre:bg-slate-900 dark:prose-pre:bg-black/60 prose-pre:text-slate-100 prose-pre:border prose-pre:border-emerald-200/50 dark:prose-pre:border-emerald-800/50 prose-blockquote:border-l-emerald-500 prose-blockquote:text-slate-600 dark:prose-blockquote:text-slate-400 prose-a:text-teal-600 dark:prose-a:text-emerald-400 prose-a:no-underline hover:prose-a:underline prose-a:font-semibold transition-colors">
                                                 <ReactMarkdown
                                                     remarkPlugins={[remarkGfm]}
                                                     rehypePlugins={[rehypeRaw]}
@@ -377,7 +224,7 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                                                         ol: ({ node, ...props }) => <ol {...props} className="list-decimal pl-4 mb-2" />,
                                                         h1: ({ node, ...props }) => <h1 {...props} className="text-lg md:text-xl font-bold mb-2" />,
                                                         h2: ({ node, ...props }) => <h2 {...props} className="text-base md:text-lg font-bold mb-2" />,
-                                                        h3: ({ node, ...props }) => <h3 {...props} className="text-sm md:text-base font-bold mb-1" />
+                                                        h3: ({ node, ...props }) => <h3 {...props} className="text-sm md:text-base font-bold mb-1" />,
                                                     }}
                                                 >
                                                     {res.text}
@@ -399,33 +246,19 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
 
                         {loading && (
                             <div className="flex justify-start">
-                                <div className="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 p-5 rounded-2xl rounded-tl-none flex gap-3 items-center backdrop-blur-sm shadow-sm dark:shadow-none">
+                                <div className="flex gap-3 items-center rounded-2xl rounded-tl-none border border-emerald-200/70 bg-linear-to-br from-emerald-50/90 via-white to-slate-50/80 p-5 shadow-sm backdrop-blur-sm dark:border-emerald-900/35 dark:bg-linear-to-br dark:from-emerald-950/25 dark:via-slate-900/95 dark:to-slate-950/90 dark:shadow-none">
                                     <div className="flex gap-1.5">
-                                        <span className="w-2 h-2 bg-blue-400 dark:bg-blue-400 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-                                        <span className="w-2 h-2 bg-blue-400 dark:bg-blue-400 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-                                        <span className="w-2 h-2 bg-blue-400 dark:bg-blue-400 rounded-full animate-bounce"></span>
+                                        <span className="size-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-bounce [animation-delay:-0.3s]" />
+                                        <span className="size-2 rounded-full bg-teal-500 dark:bg-teal-400 animate-bounce [animation-delay:-0.15s]" />
+                                        <span className="size-2 rounded-full bg-cyan-500 dark:bg-cyan-400 animate-bounce" />
                                     </div>
-                                    <span className="text-sm font-medium text-slate-500 dark:text-slate-400">Processing request...</span>
+                                    <span className="text-sm font-medium text-slate-600 dark:text-emerald-200/80">Processing request...</span>
                                 </div>
                             </div>
                         )}
 
-                        {!loading && !isTypingInitial && results.length > 0 && (
+                        {!loading && results.length > 0 && (
                             <div className="flex flex-col items-center pt-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-                                {user && (
-                                    <div className={`flex items-center gap-4 justify-between w-full max-w-xs md:max-w-sm p-3 rounded-xl border mb-6 transition-colors ${user.client_control ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/50' : 'bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-900/50'}`}>
-                                        <div className="flex flex-col">
-                                            <span className={`text-xs font-bold uppercase tracking-wide ${user.client_control ? 'text-emerald-700 dark:text-emerald-400' : 'text-orange-700 dark:text-orange-400'}`}>
-                                                {user.client_control ? 'Agent Control Enabled' : 'Agent Control Disabled'}
-                                            </span>
-                                        </div>
-                                        <label className="relative inline-flex items-center cursor-pointer shrink-0" title="Toggle Agent Control">
-                                            <input type="checkbox" checked={user.client_control} onChange={handleInlineClientControlToggle} className="sr-only peer" />
-                                            <div className={`w-11 h-6 rounded-full peer peer-focus:outline-none peer-focus:ring-2 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:inset-s-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${user.client_control ? 'bg-emerald-200/50 dark:bg-emerald-900/50 peer-focus:ring-emerald-500/50 after:border-emerald-300 peer-checked:bg-emerald-500' : 'bg-orange-200/50 dark:bg-orange-900/50 peer-focus:ring-orange-500/50 after:border-orange-300 peer-checked:bg-orange-500'}`}></div>
-                                        </label>
-                                    </div>
-                                )}
-
                                 <button
                                     type="button"
                                     onClick={() => setIsModalOpen(true)}
@@ -441,90 +274,102 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                     </div>
                 </div>
             ) : (
-                <div className="flex-1 flex items-center justify-center">
+                <div className="flex flex-1 items-center justify-center">
                     <div className="flex flex-col items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-linear-to-tr from-blue-500 to-purple-500 animate-pulse" />
                         <p className="text-sm text-slate-400 dark:text-slate-500 font-medium">Setting up your experience...</p>
                     </div>
                 </div>
             )}
-
-            <OnboardingModal
-                isOpen={showOnboarding}
-                allowDismiss
-                onClose={handleCreateOnboardingClose}
-                onComplete={handleOnboardingComplete}
-            />
-
-            {user && (
-                <OnboardingModal
-                    isOpen={showEditProfile}
-                    editUser={user}
-                    onClose={() => setShowEditProfile(false)}
-                    onComplete={handleOnboardingComplete}
-                />
-            )}
+            </div>
 
             <ConfirmModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onConfirm={handleReset}
-                description="Resetting the chat will permanently clear your current conversation history from this session. You will start a fresh session with the agent."
+                description="Resetting the chat will clear your current conversation view and start a fresh session with the agent. Previous sessions remain stored on the server."
             />
 
             {chatUnlocked && (
-                <div className="shrink-0 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 p-4 md:p-6 pb-8 md:pb-10 transition-all duration-300">
+                <FloatingBotAssistant composerRef={textareaRef} repositionEnabled={!isModalOpen} />
+            )}
+
+            {chatUnlocked && (
+                <div className="shrink-0 relative bg-linear-to-t from-white via-white/95 to-white/75 dark:from-slate-950 dark:via-slate-950/95 dark:to-transparent backdrop-blur-2xl border-t border-slate-200/60 dark:border-slate-800/60 pt-4 md:pt-5 pb-6 md:pb-8 transition-all duration-300 supports-backdrop-filter:from-white/90 supports-backdrop-filter:dark:from-slate-950/90">
                     <div
-                        className={`max-w-4xl mx-auto flex flex-nowrap overflow-x-auto gap-2 px-2 pb-2 custom-scrollbar no-scrollbar md:flex-wrap md:overflow-visible transition-all duration-500 ease-in-out ${!prompt.trim()
-                                ? 'max-h-20 opacity-100 mb-4 scale-100 translate-y-0'
-                                : 'max-h-0 opacity-0 mb-0 scale-95 -translate-y-4 pointer-events-none'
+                        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-blue-400/35 dark:via-blue-400/25 to-transparent"
+                        aria-hidden
+                    />
+                    <div className={CHAT_MAX}>
+                    <div
+                        className={`flex flex-nowrap overflow-x-auto gap-2 px-4 md:px-5 pb-2 custom-scrollbar no-scrollbar md:flex-wrap md:overflow-visible transition-all duration-500 ease-in-out ${!prompt.trim()
+                            ? 'max-h-20 opacity-100 mb-3 scale-100 translate-y-0'
+                            : 'max-h-0 opacity-0 mb-0 scale-95 -translate-y-4 pointer-events-none'
                             }`}
                     >
                         {[
-                            'Go to dashboard',
-                            'Who are your best friends?',
-                            'What are your top skills?',
-                            'Tell me about your projects',
+                            'Change theme',
+                            'Best friends?',
+                            'Skills?',
+                            'Projects?',
                             'How can I contact you?',
                         ].map((suggestion, idx) => (
                             <button
                                 key={idx}
                                 type="button"
                                 onClick={() => setPrompt(suggestion)}
-                                className="shrink-0 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-[11px] font-medium text-slate-600 dark:text-slate-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-200 dark:hover:border-blue-800 transition-all active:scale-95"
+                                className="shrink-0 px-3.5 py-1.5 rounded-full bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/80 text-[11px] font-medium text-slate-600 dark:text-slate-400 shadow-sm hover:shadow-md hover:bg-blue-50/90 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-blue-300 hover:border-blue-300/60 dark:hover:border-blue-600/40 transition-all active:scale-95"
                             >
                                 {suggestion}
                             </button>
                         ))}
                     </div>
-                    <form onSubmit={handleSubmit} className="max-w-4xl mx-auto relative group">
-                        <input
-                            type="text"
-                            value={prompt}
-                            onChange={(e) => setPrompt(e.target.value)}
-                            placeholder="Ask Question..."
-                            className="w-full bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl pl-6 pr-32 py-4 md:py-5 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 shadow-md dark:shadow-lg text-sm md:text-base"
-                        />
-                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2 pr-2">
-                            <button
-                                type="submit"
-                                disabled={loading || isTypingInitial || !prompt.trim()}
-                                className="bg-blue-600 hover:bg-blue-500 disabled:bg-slate-200 dark:disabled:bg-slate-800 disabled:text-slate-400 dark:disabled:text-slate-500 px-6 py-2.5 md:py-3 rounded-xl font-bold transition-all active:scale-95 flex items-center justify-center min-w-[80px] text-white"
-                            >
-                                {loading ? (
-                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                ) : (
-                                    'Send'
-                                )}
-                            </button>
+                    <form onSubmit={handleSubmit} className="mb-3 w-full min-w-0 px-4 md:px-5">
+                        <div className="group relative rounded-[1.35rem] p-[1.5px] bg-linear-to-br from-blue-500/55 via-violet-500/45 to-emerald-500/50 shadow-[0_8px_32px_-8px_rgba(59,130,246,0.25)] dark:from-blue-400/35 dark:via-violet-400/30 dark:to-emerald-400/35 dark:shadow-[0_12px_40px_-12px_rgba(99,102,241,0.35)] transition-all duration-300 focus-within:shadow-[0_12px_40px_-8px_rgba(59,130,246,0.35)] focus-within:from-blue-500/75 focus-within:via-violet-500/60 focus-within:to-emerald-500/65 dark:focus-within:shadow-[0_16px_48px_-12px_rgba(99,102,241,0.45)]">
+                            <div className="flex min-w-0 items-end gap-2 rounded-[1.28rem] bg-white/95 py-2 pl-4 pr-2 backdrop-blur-xl dark:bg-slate-900/92 dark:backdrop-blur-xl transition-colors">
+                                <div className="relative min-w-0 flex-1 pb-0.5">
+                                    <textarea
+                                        ref={textareaRef}
+                                        value={prompt}
+                                        onChange={(e) => setPrompt(e.target.value)}
+                                        onKeyDown={handleComposerKeyDown}
+                                        placeholder="Message Agent_B7…"
+                                        rows={1}
+                                        aria-label="Chat message"
+                                        className="peer min-h-[44px] max-h-[168px] w-full resize-none border-0 bg-transparent py-2.5 text-sm leading-relaxed text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-0 md:py-3 md:text-[15px] dark:text-slate-100 dark:placeholder:text-slate-500"
+                                    />
+                                    <p className="hidden sm:block pointer-events-none select-none text-[10px] text-slate-400/90 dark:text-slate-500 mt-0.5 opacity-0 transition-opacity duration-200 peer-focus-visible:opacity-100 tabular-nums">
+                                        <kbd className="rounded border border-slate-200/80 bg-slate-50 px-1 py-px font-sans text-[9px] dark:border-slate-600 dark:bg-slate-800">Enter</kbd>
+                                        {' '}to send ·{' '}
+                                        <kbd className="rounded border border-slate-200/80 bg-slate-50 px-1 py-px font-sans text-[9px] dark:border-slate-600 dark:bg-slate-800">Shift</kbd>
+                                        {' + '}
+                                        <kbd className="rounded border border-slate-200/80 bg-slate-50 px-1 py-px font-sans text-[9px] dark:border-slate-600 dark:bg-slate-800">Enter</kbd>
+                                        {' '}new line
+                                    </p>
+                                </div>
+                                <button
+                                    type="submit"
+                                    disabled={loading || !prompt.trim()}
+                                    title={loading ? 'Sending…' : 'Send message'}
+                                    className="group/btn mb-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-blue-600 to-violet-600 text-white shadow-lg shadow-blue-600/25 transition-all hover:scale-[1.04] hover:shadow-xl hover:shadow-blue-500/30 active:scale-95 disabled:from-slate-200 disabled:to-slate-300 disabled:text-slate-400 disabled:shadow-none disabled:hover:scale-100 dark:disabled:from-slate-800 dark:disabled:to-slate-800 dark:disabled:text-slate-500"
+                                >
+                                    {loading ? (
+                                        <Loader2 className="h-5 w-5 animate-spin opacity-90" aria-hidden strokeWidth={2.25} />
+                                    ) : (
+                                        <SendHorizontal className="h-5 w-5 -translate-x-px transition-transform group-hover/btn:translate-x-0" aria-hidden strokeWidth={2.25} />
+                                    )}
+                                    <span className="sr-only">{loading ? 'Sending' : 'Send'}</span>
+                                </button>
+                            </div>
                         </div>
                     </form>
-                    <div className="max-w-4xl mx-auto mt-3 flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-600 uppercase tracking-widest font-bold px-2">
-                        <div className="flex items-center gap-1.5">
-                            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                            Neural Link Established
-                        </div>
-                        <div>v1.0.4-stable</div>
+
+                    <div className="pt-2 px-4 md:px-5">
+                        <p className="text-center text-[11px] md:text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                            <span className="font-semibold text-slate-600 dark:text-slate-300">Portfolio assistant · </span>
+                            Answers from Barath&apos;s public profile.
+                        </p>
+                    </div>
                     </div>
                 </div>
             )}

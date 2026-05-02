@@ -5,7 +5,6 @@ export const GET: APIRoute = async () => {
     try {
         const { db } = await connectToDatabase();
 
-        const totalUsers = await db.collection('users').countDocuments();
         const totalChats = await db.collection('chats').countDocuments();
 
         const totalMessages = await db.collection('chats').aggregate([
@@ -21,7 +20,6 @@ export const GET: APIRoute = async () => {
         });
 
         return Response.json({
-            totalUsers,
             totalChats,
             totalMessages: totalMessages[0]?.total || 0,
             todayChats,
