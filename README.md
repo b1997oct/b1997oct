@@ -1,38 +1,83 @@
-# ✅ Hi, I’m Barath
-<img src="https://user-images.githubusercontent.com/74038190/212741999-016fddbd-617a-4448-8042-0ecf907aea25.gif" width="500" alt="Welcome GIF">
+# Hi there, I am <span style="color:#7d07f2">Barath</span>
+
+Web development **&** Node.js expert — front-end · back-end · TypeScript-ready stacks shipped with clarity and pace.
 
 
+## Soft Skills <img src="public/desktop-icon.svg" alt="Computer" width="28" height="28" style="vertical-align: middle;" />
 
-🚀 Passionate about exploring **AI & building AI Agents** to solve real-world problems — my goal is to create intelligent solutions that improve lives at scale.  
+<table>
+  <tr>
+    <td align="center" style="padding: 16px 12px; vertical-align: top;">
+      <img src="public/soft-skills/react.webp" alt="React" width="72" height="72" /><br /><br />
+      <sub><strong>React</strong></sub><br />
+      <sub><strong>245k</strong> ⭐</sub>
+    </td>
+    <td align="center" style="padding: 16px 12px; vertical-align: top;">
+      <img src="public/soft-skills/nextjs.png" alt="Next.js" width="72" height="72" /><br /><br />
+      <sub><strong>Next.js</strong></sub><br />
+      <sub><strong>139k</strong> ⭐</sub>
+    </td>
+    <td align="center" style="padding: 16px 12px; vertical-align: top;">
+      <img src="public/soft-skills/node.webp" alt="Node.js" width="72" height="72" /><br /><br />
+      <sub><strong>Node</strong></sub><br />
+      <sub><strong>117k</strong> ⭐</sub>
+    </td>
+    <td align="center" style="padding: 16px 12px; vertical-align: top;">
+      <img src="public/soft-skills/typescript.svg" alt="TypeScript" width="72" height="72" /><br /><br />
+      <sub><strong>TypeScript</strong></sub><br />
+      <sub><strong>109k</strong> ⭐</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" style="padding: 16px 12px; vertical-align: top;">
+      <img src="public/soft-skills/deno.png" alt="Deno" width="72" height="72" /><br /><br />
+      <sub><strong>Deno</strong></sub><br />
+      <sub><strong>107k</strong> ⭐</sub>
+    </td>
+    <td align="center" style="padding: 16px 12px; vertical-align: top;">
+      <img src="public/soft-skills/mui.webp" alt="MUI" width="72" height="72" /><br /><br />
+      <sub><strong>MUI</strong></sub><br />
+      <sub><strong>98k</strong> ⭐</sub>
+    </td>
+    <td align="center" style="padding: 16px 12px; vertical-align: top;">
+      <img src="public/soft-skills/tailwindcss.png" alt="Tailwind CSS" width="72" height="72" /><br /><br />
+      <sub><strong>Tailwind</strong></sub><br />
+      <sub><strong>95k</strong> ⭐</sub>
+    </td>
+    <td align="center" style="padding: 16px 12px; vertical-align: top;">
+      <img src="public/soft-skills/express-js.png" alt="Express" width="72" height="72" /><br /><br />
+      <sub><strong>Express</strong></sub><br />
+      <sub><strong>69k</strong> ⭐</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" style="padding: 16px 12px; vertical-align: top;">
+      <img src="public/soft-skills/astro.svg" alt="Astro" width="72" height="72" /><br /><br />
+      <sub><strong>Astro</strong></sub><br />
+      <sub><strong>59k</strong> ⭐</sub>
+    </td>
+    <td align="center" style="padding: 16px 12px; vertical-align: top;">
+      <img src="public/soft-skills/fastify.png" alt="Fastify" width="72" height="72" /><br /><br />
+      <sub><strong>Fastify</strong></sub><br />
+      <sub><strong>36k</strong> ⭐</sub>
+    </td>
+    <td align="center" style="padding: 16px 12px; vertical-align: top;">
+      <img src="public/soft-skills/ai-robot.png" alt="AI" width="72" height="72" /><br /><br />
+      <sub><strong>AI</strong></sub>
+    </td>
+    <td style="padding: 16px 12px;"></td>
+  </tr>
+</table>
 
-## 👀 Interests  
-- Engineering intelligent AI Agents for real-world tasks
-- Exploring Large Language Models (LLMs) and Generative AI
-- Building autonomous systems that make a difference
 
-## 🛠️ Skills  
-- **AI & ML:** Generative AI, LLMs, Neural Networks
-- **AI Agents:** Agentic Workflows, LangChain, Multi-Agent Systems
-- **Prompt Engineering:** RAG, Prompt Optimization, Context Injection
-- **Databases:** MongoDB, PostgreSQL, MySQL  
+## Connect with me
 
-
-## 🌱 Currently Learning 
-
-- **AI Agent Frameworks** — LangChain, AutoGPT, and custom agent architectures
-- **Advanced LLM Integration** — Prompt engineering, RAG, and fine-tuning
-- **Autonomous Systems** — Building loops that observe, think, and act
-
-## 💡 Vision  
-I’m on a mission to **build something that no one has ever done before** — unique ideas, original execution, and meaningful impact.  
-
-## 🤝 Collaboration  
-Open to collaborating on projects that:  
-- Focus on innovation and creativity  
-- Have the potential to positively impact people’s lives  
-
-📫 Reach me at **bmn789@gmail.com** — **[LinkedIn](https://www.linkedin.com/in/barathnethra/)** · **[GitHub](https://github.com/bmn789)**  
-
----
-
-⭐️ *If you like what I’m working on, don’t forget to follow for updates!*  
+<p align="left" style="margin-top: 8px;">
+<a href="https://www.linkedin.com/in/barathnethra/" style="text-decoration: none;">
+    <img src="public/linkedin.png" alt="LinkedIn" width="48" height="48" />
+  </a>
+  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+   <a href="mailto:bmn789@gmail.com" style="text-decoration: none;">
+    <img src="public/gmail.png" alt="Gmail — bmn789@gmail.com" width="48" height="48" />
+  </a>
+</p>
