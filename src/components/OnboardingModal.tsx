@@ -219,7 +219,7 @@ export const OnboardingModal = ({ isOpen, onClose, allowDismiss, editUser, onCom
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 animate-in fade-in duration-300"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 animate-in fade-in duration-300"
             onClick={canDismiss ? onClose : undefined}
         >
             <div

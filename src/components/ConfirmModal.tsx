@@ -13,7 +13,7 @@ export const ConfirmModal = ({ isOpen, onClose, onConfirm, description }: Confir
 
     return (
         <div 
-            className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-20 bg-slate-950/90 animate-in fade-in duration-300"
+            className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-20 bg-slate-950/40 animate-in fade-in duration-300"
             onClick={onClose}
         >
             <div 
