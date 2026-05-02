@@ -1,4 +1,4 @@
-# Hi there, I am <span style="color:#7d07f2">Barath</span>
+# Hi there, I am <a href="https://github.com/bmn789">Barath</a>
 
 Web development **&** Node.js expert — front-end · back-end · TypeScript-ready stacks shipped with clarity and pace.
 
