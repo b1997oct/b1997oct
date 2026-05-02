@@ -291,7 +291,12 @@ export const AgentUI = () => {
             />
 
             {chatUnlocked && (
-                <FloatingBotAssistant composerRef={textareaRef} repositionEnabled={!isModalOpen} />
+                <FloatingBotAssistant
+                    composerRef={textareaRef}
+                    composerEmpty={!prompt.trim()}
+                    repositionEnabled={!isModalOpen}
+                    onSuggestionSelect={setPrompt}
+                />
             )}
 
             {chatUnlocked && (

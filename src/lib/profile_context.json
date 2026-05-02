@@ -63,16 +63,6 @@
             "GraphQL",
             "REST APIs"
         ],
-        "ai_ml": [
-            "Generative AI",
-            "LLMs",
-            "Neural Networks"
-        ],
-        "ai_agents": [
-            "Agentic Workflows",
-            "LangChain",
-            "Multi-Agent Systems"
-        ],
         "prompt_engineering": [
             "RAG",
             "Prompt Optimization",
