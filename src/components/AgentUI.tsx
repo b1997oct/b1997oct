@@ -20,13 +20,13 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
     const [isTypingInitial, setIsTypingInitial] = useState(false);
     const [displayedInitial, setDisplayedInitial] = useState('');
     const [loading, setLoading] = useState(false);
-    const [historyLoaded, setHistoryLoaded] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [sessionId, setSessionId] = useState<string | null>(null);
-    const { user, setUser, theme, setTheme, applyThemeToDOM } = useUserStore();
+    const { user, setUser, theme, setTheme } = useUserStore();
     const [showOnboarding, setShowOnboarding] = useState(false);
     const [showEditProfile, setShowEditProfile] = useState(false);
     const [userChecked, setUserChecked] = useState(false);
+    const pendingPromptRef = useRef<string | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -42,17 +42,15 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                 });
             };
 
-            // Immediate scroll
             doScroll();
 
-            // Multi-stage catch to handle late layout shifts (like Markdown or syntax highlighting)
             setTimeout(() => {
                 requestAnimationFrame(doScroll);
             }, 100);
         }
     };
 
-    // Load user from localStorage on mount
+    // Load user from localStorage on mount (guests skip onboarding until first send or header)
     useEffect(() => {
         const storedUserId = localStorage.getItem('user_id');
         if (storedUserId) {
@@ -62,23 +60,94 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                     if (data.user) {
                         setUser(data.user);
                     } else {
-                        setShowOnboarding(true);
+                        localStorage.removeItem('user_id');
                     }
                     setUserChecked(true);
                 })
                 .catch(() => {
-                    setShowOnboarding(true);
+                    localStorage.removeItem('user_id');
                     setUserChecked(true);
                 });
         } else {
-            setShowOnboarding(true);
             setUserChecked(true);
         }
-    }, []);
+    }, [setUser]);
 
+    const handleThemeChange = (newTheme: Theme) => {
+        setTheme(newTheme);
+        const u = useUserStore.getState().user;
+        if (u) {
+            fetch('/api/user', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: u._id, theme: newTheme }),
+            }).catch(console.error);
+        }
+    };
 
+    const applyAgentResponse = (data: { response?: string; clientActions?: any[] }, actingUser: UserData | null) => {
+        let responseText = data.response || 'No response from agent.';
+        const clientControl = actingUser?.client_control;
 
-    const handleOnboardingComplete = (userData: { _id: string; username: string; theme: string; client_control: boolean }, restoredSessionId?: string | null) => {
+        if (data.clientActions && data.clientActions.length > 0) {
+            if (clientControl) {
+                data.clientActions.forEach((action: any) => {
+                    if (action.type === 'CHANGE_THEME') {
+                        handleThemeChange(action.payload);
+                    } else if (action.type === 'OPEN_EDIT_PROFILE') {
+                        setTimeout(() => setShowEditProfile(true), 1000);
+                    } else if (action.type === 'CLEAR_CHAT') {
+                        setTimeout(() => setIsModalOpen(true), 1000);
+                    } else if (action.type === 'OPEN_LINK') {
+                        setTimeout(() => {
+                            const { url, new_tab } = action.payload;
+                            if (new_tab) {
+                                window.open(url, '_blank', 'noopener,noreferrer');
+                            } else {
+                                navigate(url);
+                            }
+                        }, 1000);
+                    }
+                });
+            } else {
+                responseText += '\n\n*(System action blocked: AI Client Control is disabled.)*';
+            }
+        }
+
+        setResults(prev => [...prev, { role: 'agent', text: responseText }]);
+    };
+
+    const submitChatMessage = async (userMsg: string, actingUser: UserData | null) => {
+        setLoading(true);
+        try {
+            const sid = sessionId ?? localStorage.getItem('chat_session_id');
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    prompt: userMsg,
+                    sessionId: sid,
+                    userId: actingUser?._id,
+                }),
+            });
+
+            const data = await response.json();
+            applyAgentResponse(data, actingUser);
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : String(err);
+            setResults(prev => [...prev, { role: 'agent', text: '500 : ' + message }]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleOnboardingComplete = (
+        userData: { _id: string; username: string; theme: string; client_control: boolean },
+        restoredSessionId?: string | null
+    ) => {
+        const queued = pendingPromptRef.current;
+        pendingPromptRef.current = null;
+
         const u: UserData = {
             _id: userData._id,
             username: userData.username,
@@ -95,19 +164,22 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
             setSessionId(restoredSessionId);
             setResults([]);
             setDisplayedInitial('');
-            setHistoryLoaded(false);
+        }
+
+        if (queued) {
+            queueMicrotask(async () => {
+                setResults(prev => [...prev, { role: 'user', text: queued }]);
+                await Promise.resolve();
+                await submitChatMessage(queued, u);
+            });
         }
     };
 
-    const handleThemeChange = (newTheme: Theme) => {
-        setTheme(newTheme);
-        if (user) {
-            fetch('/api/user', {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ userId: user._id, theme: newTheme }),
-            }).catch(console.error);
-        }
+    const handleCreateOnboardingClose = () => {
+        setShowOnboarding(false);
+        const p = pendingPromptRef.current;
+        pendingPromptRef.current = null;
+        if (p) setPrompt(p);
     };
 
     const handleInlineClientControlToggle = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -129,19 +201,19 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
     const handleLogout = () => {
         localStorage.removeItem('user_id');
         localStorage.removeItem('chat_session_id');
-       window.location.reload();
+        window.location.reload();
     };
 
-    // Initialize Session ID only after user is resolved (not during onboarding)
+    // Session ID once user resolution finished (guests included)
     useEffect(() => {
-        if (!userChecked || showOnboarding) return;
+        if (!userChecked) return;
         let id = localStorage.getItem('chat_session_id');
         if (!id) {
             id = crypto.randomUUID();
             localStorage.setItem('chat_session_id', id);
         }
         setSessionId(id);
-    }, [userChecked, showOnboarding]);
+    }, [userChecked]);
 
     // Load history when session ID is set
     useEffect(() => {
@@ -162,10 +234,8 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                     setResults([{ role: 'user', text: 'show profile' }]);
                     setIsTypingInitial(true);
                 }
-                setHistoryLoaded(true);
             } catch (err) {
                 console.error("Failed to load history:", err);
-                setHistoryLoaded(true);
             }
         };
 
@@ -218,19 +288,16 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
         }, 1);
 
         return () => clearInterval(interval);
-    }, [initialMessage, isTypingInitial, sessionId]);
+    }, [initialMessage, isTypingInitial, sessionId, user?._id]);
 
-    const chatReady = userChecked && !showOnboarding && !!user;
+    const chatUnlocked = userChecked;
 
-    // Combined results for rendering
     const allMessages = [
         ...results,
         ...(isTypingInitial ? [{ role: 'agent' as const, text: displayedInitial }] : [])
     ];
 
-    // Auto-scroll to bottom of chat
     useEffect(() => {
-        // Use smooth scroll for new messages, auto for typing phase to avoid stutter
         scrollToBottom(!isTypingInitial);
     }, [allMessages, loading, isTypingInitial]);
 
@@ -238,57 +305,22 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
         e.preventDefault();
         if (loading || isTypingInitial || !prompt.trim()) return;
 
-        const userMsg = prompt;
-        setResults(prev => [...prev, { role: 'user', text: userMsg }]);
-        setPrompt('');
-        setLoading(true);
+        const userMsg = prompt.trim();
 
-        try {
-            const response = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: userMsg, sessionId, userId: user?._id }),
-            });
-
-            const data = await response.json();
-            let responseText = data.response || 'No response from agent.';
-
-            if (data.clientActions && data.clientActions.length > 0) {
-                if (user?.client_control) {
-                    data.clientActions.forEach((action: any) => {
-                        if (action.type === 'CHANGE_THEME') {
-                            handleThemeChange(action.payload);
-                        } else if (action.type === 'OPEN_EDIT_PROFILE') {
-                            setTimeout(() => setShowEditProfile(true), 1000);
-                        } else if (action.type === 'CLEAR_CHAT') {
-                            setTimeout(() => setIsModalOpen(true), 1000);
-                        } else if (action.type === 'OPEN_LINK') {
-                            setTimeout(() => {
-                                const { url, new_tab } = action.payload;
-                                if (new_tab) {
-                                    window.open(url, '_blank', 'noopener,noreferrer');
-                                } else {
-                                   navigate(url);
-                                }
-                            }, 1000);
-                        }
-                    });
-                } else {
-                    responseText += '\n\n*(System action blocked: AI Client Control is disabled.)*';
-                }
-            }
-
-            setResults(prev => [...prev, { role: 'agent', text: responseText }]);
-        } catch (err:any) {
-            setResults(prev => [...prev, { role: 'agent', text: "500 : " + err.message }]);
-        } finally {
-            setLoading(false);
+        if (!user) {
+            pendingPromptRef.current = userMsg;
+            setShowOnboarding(true);
+            setPrompt('');
+            return;
         }
+
+        setPrompt('');
+        setResults(prev => [...prev, { role: 'user', text: userMsg }]);
+        await submitChatMessage(userMsg, user);
     };
 
     return (
         <div className="flex flex-col h-screen max-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-hidden transition-colors duration-300">
-            {/* Header */}
             <header className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 backdrop-blur-md z-10 shrink-0">
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-linear-to-tr from-blue-500 to-purple-500 animate-pulse" />
@@ -296,7 +328,16 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                         Agent_B1997
                     </h1>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3 md:gap-4">
+                    {!user && userChecked && (
+                        <button
+                            type="button"
+                            onClick={() => setShowOnboarding(true)}
+                            className="text-xs md:text-sm font-semibold px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-500 transition-colors active:scale-95"
+                        >
+                            Sign in / Register
+                        </button>
+                    )}
                     {user && (
                         <UserProfile
                             username={user.username}
@@ -310,8 +351,7 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                 </div>
             </header>
 
-            {/* Chat Area - only render when user is resolved */}
-            {chatReady ? (
+            {chatUnlocked ? (
                 <div
                     ref={scrollRef}
                     className="flex-1 overflow-y-auto px-4 py-8 md:px-6 custom-scrollbar"
@@ -372,17 +412,19 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
 
                         {!loading && !isTypingInitial && results.length > 0 && (
                             <div className="flex flex-col items-center pt-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-                                <div className={`flex items-center gap-4 justify-between w-full max-w-xs md:max-w-sm p-3 rounded-xl border mb-6 transition-colors ${user?.client_control ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/50' : 'bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-900/50'}`}>
-                                    <div className="flex flex-col">
-                                        <span className={`text-xs font-bold uppercase tracking-wide ${user?.client_control ? 'text-emerald-700 dark:text-emerald-400' : 'text-orange-700 dark:text-orange-400'}`}>
-                                            {user?.client_control ? 'Agent Control Enabled' : 'Agent Control Disabled'}
-                                        </span>
+                                {user && (
+                                    <div className={`flex items-center gap-4 justify-between w-full max-w-xs md:max-w-sm p-3 rounded-xl border mb-6 transition-colors ${user.client_control ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/50' : 'bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-900/50'}`}>
+                                        <div className="flex flex-col">
+                                            <span className={`text-xs font-bold uppercase tracking-wide ${user.client_control ? 'text-emerald-700 dark:text-emerald-400' : 'text-orange-700 dark:text-orange-400'}`}>
+                                                {user.client_control ? 'Agent Control Enabled' : 'Agent Control Disabled'}
+                                            </span>
+                                        </div>
+                                        <label className="relative inline-flex items-center cursor-pointer shrink-0" title="Toggle Agent Control">
+                                            <input type="checkbox" checked={user.client_control} onChange={handleInlineClientControlToggle} className="sr-only peer" />
+                                            <div className={`w-11 h-6 rounded-full peer peer-focus:outline-none peer-focus:ring-2 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:inset-s-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${user.client_control ? 'bg-emerald-200/50 dark:bg-emerald-900/50 peer-focus:ring-emerald-500/50 after:border-emerald-300 peer-checked:bg-emerald-500' : 'bg-orange-200/50 dark:bg-orange-900/50 peer-focus:ring-orange-500/50 after:border-orange-300 peer-checked:bg-orange-500'}`}></div>
+                                        </label>
                                     </div>
-                                    <label className="relative inline-flex items-center cursor-pointer shrink-0" title="Toggle Agent Control">
-                                        <input type="checkbox" checked={user?.client_control || false} onChange={handleInlineClientControlToggle} className="sr-only peer" />
-                                        <div className={`w-11 h-6 rounded-full peer peer-focus:outline-none peer-focus:ring-2 peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:inset-s-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${user?.client_control ? 'bg-emerald-200/50 dark:bg-emerald-900/50 peer-focus:ring-emerald-500/50 after:border-emerald-300 peer-checked:bg-emerald-500' : 'bg-orange-200/50 dark:bg-orange-900/50 peer-focus:ring-orange-500/50 after:border-orange-300 peer-checked:bg-orange-500'}`}></div>
-                                    </label>
-                                </div>
+                                )}
 
                                 <button
                                     type="button"
@@ -409,15 +451,19 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
 
             <OnboardingModal
                 isOpen={showOnboarding}
+                allowDismiss
+                onClose={handleCreateOnboardingClose}
                 onComplete={handleOnboardingComplete}
             />
 
-            <OnboardingModal
-                isOpen={showEditProfile}
-                editUser={user}
-                onClose={() => setShowEditProfile(false)}
-                onComplete={handleOnboardingComplete}
-            />
+            {user && (
+                <OnboardingModal
+                    isOpen={showEditProfile}
+                    editUser={user}
+                    onClose={() => setShowEditProfile(false)}
+                    onComplete={handleOnboardingComplete}
+                />
+            )}
 
             <ConfirmModal
                 isOpen={isModalOpen}
@@ -426,7 +472,7 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                 description="Resetting the chat will permanently clear your current conversation history from this session. You will start a fresh session with the agent."
             />
 
-            {chatReady && (
+            {chatUnlocked && (
                 <div className="shrink-0 bg-white dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 p-4 md:p-6 pb-8 md:pb-10 transition-all duration-300">
                     <div
                         className={`max-w-4xl mx-auto flex flex-nowrap overflow-x-auto gap-2 px-2 pb-2 custom-scrollbar no-scrollbar md:flex-wrap md:overflow-visible transition-all duration-500 ease-in-out ${!prompt.trim()
@@ -435,10 +481,11 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                             }`}
                     >
                         {[
-                            "Who are your best friends?",
-                            "What are your top skills?",
-                            "Tell me about your projects",
-                            "How can I contact you?"
+                            'Go to dashboard',
+                            'Who are your best friends?',
+                            'What are your top skills?',
+                            'Tell me about your projects',
+                            'How can I contact you?',
                         ].map((suggestion, idx) => (
                             <button
                                 key={idx}

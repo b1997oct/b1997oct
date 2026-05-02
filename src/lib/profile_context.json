@@ -1,12 +1,12 @@
 {
     "basic": {
         "name": "Barath Nethra",
-        "email": "b1997oct@gmail.com",
+        "email": "bmn789@gmail.com",
         "phone": "+91 78924 75321",
         "location": "Bangalore, Karnataka - 560076",
-        "github": "https://github.com/b1997oct",
-        "linkedin": "https://linkedin.com/in/barath-nethra",
-        "website": "https://b1997oct.vercel.app",
+        "github": "https://github.com/bmn789",
+        "linkedin": "https://www.linkedin.com/in/barathnethra/",
+        "website": "https://bmn789.vercel.app",
         "tagline": "Frontend Developer with 4+ years of experience building scalable, high-performance web applications.",
         "summary": "Skilled in JavaScript, Nextjs, React, TypeScript, Redux, Tailwind CSS, and modern testing frameworks. Strong expertise in responsive UI, accessibility, and performance optimization. Adept at collaborating in agile teams and delivering pixel-perfect, user-focused applications."
     },
@@ -96,8 +96,8 @@
             "description": "CRM & B2B software platform (React.js, NodeJs)."
         },
         {
-            "name": "Firstcareer",
-            "url": "https://firstcareer.co",
+            "name": "Speedjobfinder",
+            "url": "https://speedjobfinder.in",
             "description": "Job application portal (Next.js, MongoDB, Express)."
         },
         {

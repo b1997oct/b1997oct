@@ -31,7 +31,7 @@ Open to collaborating on projects that:
 - Focus on innovation and creativity  
 - Have the potential to positively impact people’s lives  
 
-📫 Reach me at: **b1997oct@gmail.com**  
+📫 Reach me at **bmn789@gmail.com** — **[LinkedIn](https://www.linkedin.com/in/barathnethra/)** · **[GitHub](https://github.com/bmn789)**  
 
 ---
 

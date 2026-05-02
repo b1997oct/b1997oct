@@ -71,11 +71,13 @@ interface ExistingUser {
 interface OnboardingModalProps {
     isOpen: boolean;
     onClose?: () => void;
+    /** When true (non-edit), user can close via backdrop or X without submitting. */
+    allowDismiss?: boolean;
     editUser?: ExistingUser | null;
     onComplete: (user: { _id: string; username: string; theme: string; client_control: boolean }, sessionId?: string | null) => void;
 }
 
-export const OnboardingModal = ({ isOpen, onClose, editUser, onComplete }: OnboardingModalProps) => {
+export const OnboardingModal = ({ isOpen, onClose, allowDismiss, editUser, onComplete }: OnboardingModalProps) => {
     const [generating, setGenerating] = useState(false);
     const [serverError, setServerError] = useState('');
     const [mode, setMode] = useState<ModalMode>(editUser ? 'edit' : 'create');
@@ -202,6 +204,7 @@ export const OnboardingModal = ({ isOpen, onClose, editUser, onComplete }: Onboa
 
     const isEdit = mode === 'edit';
     const isLogin = mode === 'login';
+    const canDismiss = isEdit ? !!onClose : allowDismiss && !!onClose;
 
     const title = isEdit ? 'Edit Profile' : isLogin ? 'Welcome Back' : 'Welcome';
     const subtitle = isEdit
@@ -211,13 +214,13 @@ export const OnboardingModal = ({ isOpen, onClose, editUser, onComplete }: Onboa
             : 'Set up your profile to get started';
     const submitLabel = isSubmitting
         ? (isEdit ? 'Saving...' : isLogin ? 'Logging in...' : 'Creating...')
-        : (isEdit ? 'Save Changes' : isLogin ? 'Log In' : 'Get Started');
+        : (isEdit ? 'Save Changes' : isLogin ? 'Log In' : 'Create Account');
     const clientControlToggleId = isEdit ? 'edit-client-control-toggle' : 'client-control-toggle';
 
     return (
         <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 animate-in fade-in duration-300"
-            onClick={isEdit ? onClose : undefined}
+            onClick={canDismiss ? onClose : undefined}
         >
             <div
                 className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden animate-in slide-in-from-bottom-8 duration-300"
@@ -232,8 +235,9 @@ export const OnboardingModal = ({ isOpen, onClose, editUser, onComplete }: Onboa
                             {subtitle}
                         </p>
                     </div>
-                    {isEdit && onClose && (
+                    {canDismiss && onClose && (
                         <button
+                            type="button"
                             onClick={onClose}
                             className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                         >
