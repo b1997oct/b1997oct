@@ -325,7 +325,7 @@ export const AgentUI = ({ initialMessage }: AgentUIProps) => {
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-linear-to-tr from-blue-500 to-purple-500 animate-pulse" />
                     <h1 className="text-xl md:text-2xl font-bold bg-linear-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
-                        Agent_B1997
+                        Agent_B7
                     </h1>
                 </div>
                 <div className="flex items-center gap-3 md:gap-4">

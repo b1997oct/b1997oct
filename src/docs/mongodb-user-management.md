@@ -1,6 +1,6 @@
 # MongoDB & User Management
 
-This document outlines how chat history and temporary user sessions are managed using MongoDB in the **Agent_B1997** project.
+This document outlines how chat history and temporary user sessions are managed using MongoDB in the **Agent_B7** project.
 
 ## 1. Overview
 The system uses **MongoDB** to store chat conversations for "temporary" users. Users are identified by a unique `sessionId` stored in their browser's `localStorage`.
