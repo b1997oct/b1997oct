@@ -20,8 +20,16 @@ const pageDescription =
 		<link rel="apple-touch-icon" href="/logo.png" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="generator" content={Astro.generator} />
-		<meta name="theme-color" content="#020617" media="(prefers-color-scheme: dark)" />
-		<meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)" />
+		<meta
+			name="theme-color"
+			content="#020617"
+			media="(prefers-color-scheme: dark)"
+		/>
+		<meta
+			name="theme-color"
+			content="#f8fafc"
+			media="(prefers-color-scheme: light)"
+		/>
 		<title>{pageTitle}</title>
 		<meta name="description" content={pageDescription} />
 		<meta
@@ -49,21 +57,43 @@ const pageDescription =
 		<meta name="twitter:description" content={pageDescription} />
 		<meta name="twitter:image" content={ogImageURL.href} />
 		<script is:inline>
-			const stored = typeof localStorage !== 'undefined' ? localStorage.getItem('theme') : null;
+			const stored =
+				typeof localStorage !== "undefined"
+					? localStorage.getItem("theme")
+					: null;
 			const resolved =
-				stored === 'light' || stored === 'dark'
+				stored === "light" || stored === "dark"
 					? stored
-					: window.matchMedia('(prefers-color-scheme: dark)').matches
-						? 'dark'
-						: 'light';
+					: window.matchMedia("(prefers-color-scheme: dark)").matches
+						? "dark"
+						: "light";
 
-			document.documentElement.classList.toggle('dark', resolved === 'dark');
-			if (stored === 'light' || stored === 'dark') {
-				window.localStorage.setItem('theme', resolved);
+			document.documentElement.classList.toggle(
+				"dark",
+				resolved === "dark",
+			);
+			if (stored === "light" || stored === "dark") {
+				window.localStorage.setItem("theme", resolved);
 			}
 		</script>
+		<!-- Google tag (gtag.js) -->
+		<script
+			async
+			src="https://www.googletagmanager.com/gtag/js?id=G-SXV8END968"
+		></script>
+		<script is:inline>
+			window.dataLayer = window.dataLayer || [];
+			function gtag() {
+				dataLayer.push(arguments);
+			}
+			gtag("js", new Date());
+
+			gtag("config", "G-SXV8END968");
+		</script>
 	</head>
-	<body class="bg-white dark:bg-slate-950 min-h-screen transition-colors duration-300">
+	<body
+		class="bg-white dark:bg-slate-950 min-h-screen transition-colors duration-300"
+	>
 		<AgentUI client:load />
 	</body>
 </html>
